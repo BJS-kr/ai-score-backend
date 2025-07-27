@@ -1,0 +1,25 @@
+# Build stage
+FROM node:20 AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm cache clean --force && npm ci
+
+COPY . .
+
+CMD npm run migrate && npm run generate && npm run start:dev
+
+
+# RUN npm run build
+
+# FROM node:20-alpine
+
+# WORKDIR /app
+
+# COPY --from=builder /app/dist ./dist
+# COPY --from=builder /app/node_modules ./node_modules
+# COPY --from=builder /app/.env.example ./.env.example
+# COPY --from=builder /app/ .
+# COPY --from=builder /app/.env.example ./.env

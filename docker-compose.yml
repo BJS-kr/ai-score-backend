@@ -1,0 +1,66 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - '16686:16686'
+      - '4318:4318'
+      - '4317:4317'
+    environment:
+      - LOG_LEVEL=debug
+  db:
+    image: postgres
+    container_name: ai-score-db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - '${DB_PORT}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    container_name: ai-score-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - '${REDIS_PORT}:6379'
+    volumes:
+      - redis_data:/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: ai-score-app
+    ports:
+      - '${PORT}:3000'
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+      - OTEL_SERVICE_NAME=ai-score-backend
+      - OTEL_LOG_LEVEL=info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    volumes:
+      - .:/app
+      # - /app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,186 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"] 
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+model Student {
+  id          String       @id @default(uuid())
+  studentName String       @map("student_name")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  
+  submissions Submission[]
+  
+  @@map("students")
+}
+
+model Submission {
+  id                    String             @id @default(uuid())
+  studentId             String             @map("student_id")
+  componentType         String             @map("component_type")
+  submitText            String             @map("submit_text")
+  status                SubmissionStatus   @default(PENDING)
+ 
+  // 완료 시 정보 적재
+  score                 Int?
+  feedback              String?            @map("feedback") @db.Text
+  highlights            Json?              @map("highlights") @db.JsonB
+  
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+  
+  student               Student            @relation(fields: [studentId], references: [id])
+  submissionMedia       SubmissionMedia[]
+  submissionLogs        SubmissionLog[]
+  revisions             Revision[]
+  
+  @@map("submissions")
+}
+
+model SubmissionMedia {
+  id           String    @id @default(uuid())
+  submissionId String    @map("submission_id")
+  mediaType    MediaType @map("media_type")
+  fileUrl      String    @map("file_url")
+  sasUrl       String    @map("sas_url")
+  fileSize     BigInt    @map("file_size")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@map("submission_media")
+}
+
+model SubmissionLog {
+  traceId        String      @id @map("trace_id")
+  submissionId   String      @map("submission_id")
+  requestUri     String      @map("request_uri")
+  status         SubmissionLogStatus @default(PENDING)
+
+  // 요청 완료 시 업데이트
+  latency        Int?
+  
+  // 평가의 진행에 따라 순차적으로 업데이트
+  videoFileUrl   String?     @map("video_file_url")
+  videoSasUrl    String?     @map("video_sas_url")
+  audioFileUrl   String?     @map("audio_file_url")
+  audioSasUrl    String?     @map("audio_sas_url")
+  reviewPrompt   String?     @map("review_prompt") @db.Text
+  reviewResponse String?     @map("review_response") @db.Text
+
+  // 에러 발생 시 적재
+  errorMessage   String?     @map("error_message") @db.Text
+  
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  submission     Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@map("submission_logs")
+}
+
+model Revision {
+  id           String         @id @default(uuid())
+  submissionId String         @map("submission_id")
+  previousScore Int?          @map("previous_score")
+  newScore     Int?           @map("new_score")
+  previousFeedback String?    @map("previous_feedback")
+  newFeedback  String?        @map("new_feedback")
+  previousHighlights Json?    @map("previous_highlights") @db.JsonB
+  newHighlights Json?         @map("new_highlights") @db.JsonB
+  status       RevisionStatus @default(PENDING)
+  reason       String?
+  apiLatency   Int?           @map("api_latency")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  
+  submission   Submission     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@map("revisions")
+}
+
+model StatsDaily {
+  id            String   @id @default(uuid())
+  date          DateTime @unique @db.Date
+  totalSubmissions Int  @default(0) @map("total_submissions")
+  successfulSubmissions Int @default(0) @map("successful_submissions")
+  failedSubmissions Int @default(0) @map("failed_submissions")
+  pendingSubmissions Int @default(0) @map("pending_submissions")
+  totalRevisions Int @default(0) @map("total_revisions")
+  averageScore Float? @map("average_score")
+  averageLatency Float? @map("average_latency")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@map("stats_daily")
+}
+
+model StatsWeekly {
+  id            String   @id @default(uuid())
+  weekStart     DateTime @map("week_start") @db.Date
+  weekEnd       DateTime @map("week_end") @db.Date
+  totalSubmissions Int  @default(0) @map("total_submissions")
+  successfulSubmissions Int @default(0) @map("successful_submissions")
+  failedSubmissions Int @default(0) @map("failed_submissions")
+  pendingSubmissions Int @default(0) @map("pending_submissions")
+  totalRevisions Int @default(0) @map("total_revisions")
+  averageScore Float? @map("average_score")
+  averageLatency Float? @map("average_latency")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@unique([weekStart, weekEnd])
+  @@map("stats_weekly")
+}
+
+model StatsMonthly {
+  id            String   @id @default(uuid())
+  year          Int
+  month         Int
+  totalSubmissions Int  @default(0) @map("total_submissions")
+  successfulSubmissions Int @default(0) @map("successful_submissions")
+  failedSubmissions Int @default(0) @map("failed_submissions")
+  pendingSubmissions Int @default(0) @map("pending_submissions")
+  totalRevisions Int @default(0) @map("total_revisions")
+  averageScore Float? @map("average_score")
+  averageLatency Float? @map("average_latency")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@unique([year, month])
+  @@map("stats_monthly")
+}
+
+enum SubmissionStatus {
+  PENDING
+  FAILED
+  COMPLETED
+}
+
+enum MediaType {
+  VIDEO
+  AUDIO
+}
+
+enum SubmissionLogStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum RevisionStatus {
+  PENDING
+  FAILED
+  COMPLETED
+}
