@@ -1,9 +1,5 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AzureOpenAIIntegration } from './score/IO/integrations/azure-openai.integration';
-import { AzureBlobStorageIntegration } from './score/IO/integrations/azure-blob-storage.integration';
-import { VideoService } from './score/IO/integrations/ffmpeg-video-processing.integration';
-import { DbModule } from './system/database/db.module';
 import { LoggerService } from './common/logger/logger.service';
 import { setupGlobalGuardrail } from './system/setup/guardrail';
 import { APP_PROVIDERS } from './common/providers';

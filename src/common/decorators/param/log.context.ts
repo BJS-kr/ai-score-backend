@@ -1,5 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { trace } from '@opentelemetry/api';
+import { Request } from 'express';
 
 export const LogContext = createParamDecorator(
   (data: any, ctx: ExecutionContext) => {
@@ -8,7 +9,7 @@ export const LogContext = createParamDecorator(
 
     return {
       traceId,
-      requestUri: ctx.switchToHttp().getRequest().originalUrl,
+      requestUri: ctx.switchToHttp().getRequest<Request>().originalUrl,
       startTime: Date.now(),
       logInfo: {},
     };

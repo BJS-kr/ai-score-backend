@@ -3,6 +3,19 @@ import { trace } from '@opentelemetry/api';
 import pino from 'pino';
 import { ILogger } from './logger.interface';
 
+type LogData = {
+  level: string;
+  message: string;
+  traceId: string;
+  timestamp: string;
+  context?: string;
+  error?: {
+    name: string;
+    message: string;
+    stack?: string;
+  };
+};
+
 @Injectable()
 export class LoggerService implements ILogger {
   private readonly logger: pino.Logger;
@@ -30,9 +43,9 @@ export class LoggerService implements ILogger {
     message: string,
     context?: string,
     meta?: Record<string, any>,
-  ): any {
+  ) {
     const traceId = this.getTraceId();
-    const logData: any = {
+    const logData: LogData = {
       level,
       message,
       traceId,
@@ -61,7 +74,12 @@ export class LoggerService implements ILogger {
     context?: string,
     meta?: Record<string, any>,
   ): void {
-    const logData = this.formatMessage('error', message, context, meta);
+    const logData: LogData = this.formatMessage(
+      'error',
+      message,
+      context,
+      meta,
+    );
     if (error) {
       logData.error = {
         name: error.name,

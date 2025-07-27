@@ -2,11 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AzureOpenAI } from 'openai';
 import '@azure/openai/types';
-import { StrictReturn } from '../../../internal/stricter/strict.return';
-import {
-  EssayEvaluation,
-  ScoreRepository,
-} from '../respositories/score.respository';
+import { StrictReturn } from '../../helper/stricter/strict.return';
+import { EssayEvaluation } from '../respositories/score.respository';
 
 type RawReviewResponse = {
   reviewPrompt: string;
@@ -98,18 +95,11 @@ export class AzureOpenAIIntegration {
     content: string,
   ): StrictReturn<EssayEvaluation | null> {
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        return {
-          success: false,
-          error: 'No JSON found in response',
-          data: null,
-        };
-      }
+      const evaluation: EssayEvaluation = JSON.parse(
+        content,
+      ) as EssayEvaluation;
 
-      const jsonResponse = JSON.parse(jsonMatch[0]);
-
-      if (!this.isValidEvaluation(jsonResponse)) {
+      if (!this.isValidEvaluation(evaluation)) {
         return {
           success: false,
           error: 'Invalid response format',
@@ -117,52 +107,16 @@ export class AzureOpenAIIntegration {
         };
       }
 
-      // Validate required fields
-      if (typeof jsonResponse.score !== 'number') {
-        return {
-          success: false,
-          error: 'Invalid score in response',
-          data: null,
-        };
-      }
-
-      if (jsonResponse.score < 0 || jsonResponse.score > 10) {
-        return {
-          success: false,
-          error: 'Score must be between 0 and 10',
-          data: null,
-        };
-      }
-
-      if (
-        typeof jsonResponse.feedback !== 'string' ||
-        !jsonResponse.feedback.trim()
-      ) {
-        return {
-          success: false,
-          error: 'Invalid feedback in response',
-          data: null,
-        };
-      }
-
-      if (!Array.isArray(jsonResponse.highlights)) {
-        return {
-          success: false,
-          error: 'Invalid highlights in response',
-          data: null,
-        };
-      }
-
       // Ensure highlights are strings
-      const validHighlights = jsonResponse.highlights.filter(
+      const validHighlights = evaluation.highlights.filter(
         (highlight) => typeof highlight === 'string' && highlight.trim(),
       );
 
       return {
         success: true,
         data: {
-          score: Math.round(jsonResponse.score),
-          feedback: jsonResponse.feedback.trim(),
+          score: Math.round(evaluation.score),
+          feedback: evaluation.feedback.trim(),
           highlights: validHighlights,
         },
       };
@@ -178,12 +132,27 @@ export class AzureOpenAIIntegration {
     }
   }
 
-  private isValidEvaluation(value: any): value is EssayEvaluation {
-    return (
-      value &&
-      typeof value.score === 'number' &&
-      typeof value.feedback === 'string' &&
-      Array.isArray(value.highlights)
-    );
+  private isValidEvaluation(value: EssayEvaluation): value is EssayEvaluation {
+    if (!value) {
+      return false;
+    }
+
+    if (typeof value.score !== 'number') {
+      return false;
+    }
+
+    if (value.score < 0 || value.score > 10) {
+      return false;
+    }
+
+    if (typeof value.feedback !== 'string' || !value.feedback.trim()) {
+      return false;
+    }
+
+    if (!Array.isArray(value.highlights)) {
+      return false;
+    }
+
+    return true;
   }
 }

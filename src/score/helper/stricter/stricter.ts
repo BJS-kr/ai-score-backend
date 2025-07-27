@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { StrictReturn } from 'src/internal/stricter/strict.return';
+import { StrictReturn } from 'src/score/helper/stricter/strict.return';
 import { SubmissionLogInfo } from 'src/score/core/review.service';
 import { ScoreRepository } from 'src/score/IO/respositories/score.respository';
 
@@ -52,7 +52,7 @@ export class StricterHelper {
     keys: (keyof NonNullable<T>)[],
     step: string,
   ): Promise<StrictReturn<T | null>> {
-    if (!source.success || !source.data) {
+    if (!source.success || source.data === null) {
       return this.handleFail({
         internalError: `${step} failed for submission ${submissionId}
          error: ${source.error}
@@ -65,7 +65,7 @@ export class StricterHelper {
 
     keys.forEach((key) => {
       this.accumulateContextInfo(logContext, {
-        [key]: source.data![key],
+        [key]: (source.data as NonNullable<T>)[key],
       });
     });
 

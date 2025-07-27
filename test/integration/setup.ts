@@ -5,10 +5,10 @@ console.log('🧪 Setting up integration tests...');
 jest.setTimeout(60000);
 
 // Global setup for integration tests
-beforeAll(async () => {
+beforeAll(() => {
   console.log('🚀 Starting integration test suite');
 });
 
-afterAll(async () => {
+afterAll(() => {
   console.log('✅ Integration test suite completed');
 });

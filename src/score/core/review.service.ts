@@ -7,12 +7,12 @@ import {
 import { AzureBlobStorageIntegration } from '../IO/integrations/azure-blob-storage.integration';
 import { AzureOpenAIIntegration } from '../IO/integrations/azure-openai.integration';
 import { VideoService } from '../IO/integrations/ffmpeg-video-processing.integration';
-import { StrictReturn } from 'src/internal/stricter/strict.return';
+import { StrictReturn } from 'src/score/helper/stricter/strict.return';
 import { SubmissionResult } from './interfaces/submission.result';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { MediaType } from '@prisma/client';
 import { LogContext } from 'src/common/decorators/param/log.context';
-import { StricterHelper } from 'src/internal/stricter/stricter';
+import { StricterHelper } from 'src/score/helper/stricter/stricter';
 
 export type SubmissionLogInfo = {
   localVideoPath?: string;
@@ -306,7 +306,7 @@ export class ScoreService {
        audioSasUrl: ${logContext.logInfo.audioSasUrl}
        score: ${logContext.logInfo.score}
        feedback: ${logContext.logInfo.feedback}
-       highlights: ${logContext.logInfo.highlights}
+       highlights: ${logContext.logInfo.highlights || []}
        highlightedText: ${logContext.logInfo.highlightedText}
       `,
     );

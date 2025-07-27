@@ -5,7 +5,7 @@ import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as ffprobeStatic from 'ffprobe-static';
-import { StrictReturn } from '../../../internal/stricter/strict.return';
+import { StrictReturn } from '../../helper/stricter/strict.return';
 const ffmpegStatic = require('ffmpeg-static');
 
 export interface VideoProcessingRequest {
@@ -152,7 +152,7 @@ export class VideoService {
         if (err) {
           return resolve({
             success: false,
-            error: `Failed to get video info: ${err.message}`,
+            error: `Failed to get video info: ${err}`,
             data: null,
           });
         }
@@ -318,9 +318,9 @@ export class VideoService {
     }
   }
 
-  private async ensureTempDirectoryExists(): Promise<void> {
+  private ensureTempDirectoryExists(): void {
     if (!fsSync.existsSync(this.tempDirectory)) {
-      await fs.mkdir(this.tempDirectory, { recursive: true });
+      fsSync.mkdirSync(this.tempDirectory, { recursive: true });
     }
   }
 }

@@ -6,7 +6,7 @@ export const AlwaysOk = ({
   type,
 }: {
   description: string;
-  type: any;
+  type: new () => any;
 }): MethodDecorator =>
   applyDecorators(
     ApiResponse({

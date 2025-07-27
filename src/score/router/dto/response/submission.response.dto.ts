@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CommonResponseDto } from 'src/common/response/common.response.dto';
-import { StrictReturn } from 'src/internal/stricter/strict.return';
+import { StrictReturn } from 'src/score/helper/stricter/strict.return';
 import { SubmissionResult } from 'src/score/core/interfaces/submission.result';
 import { SubmissionRequestDto } from '../request/submission.request.dto';
 
@@ -56,8 +56,10 @@ export class SubmissionResponseDto extends CommonResponseDto {
   })
   apiLatency: number;
 
-  static isSubmissionResult(value: any): value is SubmissionResult {
-    return value.success && !!value;
+  static isSubmissionResult(
+    value: SubmissionResult | null,
+  ): value is SubmissionResult {
+    return !!value;
   }
 
   static build(

@@ -6,12 +6,13 @@ import {
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { LoggerService } from '../../logger/logger.service';
+import { Request } from 'express';
 
 @Injectable()
 export class RequestLoggingInterceptor implements NestInterceptor {
   constructor(private readonly logger: LoggerService) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const method = request.method;
     const url = request.originalUrl;
 

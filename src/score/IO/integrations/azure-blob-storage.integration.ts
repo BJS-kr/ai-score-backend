@@ -8,9 +8,8 @@ import {
   ContainerClient,
 } from '@azure/storage-blob';
 import { readFile } from 'fs/promises';
-import { StrictReturn } from '../../../internal/stricter/strict.return';
+import { StrictReturn } from '../../helper/stricter/strict.return';
 import { ScoreRepository } from '../respositories/score.respository';
-import { LoggerService } from 'src/common/logger/logger.service';
 import { MediaType } from '@prisma/client';
 
 export interface GenerateSasUrlRequest {
@@ -101,7 +100,7 @@ export class AzureBlobStorageIntegration {
     }
 
     const fileUrl = blockBlobClient.url;
-    const sasUrlResult = await this.generateSasUrl({
+    const sasUrlResult = this.generateSasUrl({
       fileName: uniqueFileName,
       expiresInHours: 24,
     });
@@ -137,9 +136,9 @@ export class AzureBlobStorageIntegration {
     };
   }
 
-  private async generateSasUrl(
+  private generateSasUrl(
     request: GenerateSasUrlRequest,
-  ): Promise<StrictReturn<string | null>> {
+  ): StrictReturn<string | null> {
     const expiresOn = new Date();
     expiresOn.setHours(expiresOn.getHours() + request.expiresInHours);
 
