@@ -72,13 +72,19 @@ model SubmissionLog {
   // 요청 완료 시 업데이트
   latency        Int?
   
-  // 평가의 진행에 따라 순차적으로 업데이트
+  // 실패 시 실패 시점까지 수집 된 데이터, 성공 시 전체 데이터 적재
+  localVideoPath String?     @map("local_video_path")
+  localAudioPath String?     @map("local_audio_path")
   videoFileUrl   String?     @map("video_file_url")
   videoSasUrl    String?     @map("video_sas_url")
   audioFileUrl   String?     @map("audio_file_url")
   audioSasUrl    String?     @map("audio_sas_url")
   reviewPrompt   String?     @map("review_prompt") @db.Text
   reviewResponse String?     @map("review_response") @db.Text
+  score          Int?
+  feedback       String?     @map("feedback") @db.Text
+  highlights     Json?       @map("highlights") @db.JsonB
+  highlightedText String?     @map("highlighted_text") @db.Text
 
   // 에러 발생 시 적재
   errorMessage   String?     @map("error_message") @db.Text

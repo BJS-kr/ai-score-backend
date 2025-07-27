@@ -1,4 +1,4 @@
-import process from 'node:process';
+import * as process from 'node:process';
 import { ILogger } from 'src/common/logger/logger.interface';
 
 export function setupGlobalGuardrail(logger: ILogger): void {

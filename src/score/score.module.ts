@@ -1,15 +1,30 @@
 import { Module } from '@nestjs/common';
 import { ScoreController } from './router/score.controller';
-import { ScoreService } from './core/review.service';
+import { ScoreService } from './core/submission/review.service';
 import { AzureBlobStorageIntegration } from './IO/integrations/azure-blob-storage.integration';
-import { VideoService } from './IO/integrations/ffmpeg-video-processing.integration';
+import { VideoService } from './IO/video/video.service';
 import { AzureOpenAIIntegration } from './IO/integrations/azure-openai.integration';
 import { DbModule } from 'src/system/database/db.module';
 import { StricterHelper } from 'src/score/helper/stricter/stricter';
 import { ScoreRepository } from './IO/respositories/score.respository';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 
 @Module({
-  imports: [DbModule],
+  imports: [
+    DbModule,
+    MulterModule.register({
+      storage: diskStorage({
+        destination(req, file, callback) {
+          callback(null, './uploads');
+        },
+        filename(req, file, callback) {
+          callback(null, `${uuidv4()}-${file.originalname}`);
+        },
+      }),
+    }),
+  ],
   controllers: [ScoreController],
   providers: [
     ScoreService,

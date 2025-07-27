@@ -7,7 +7,7 @@ import {
   SubmissionLogStatus,
   SubmissionStatus,
 } from '@prisma/client';
-import { SubmissionLogInfo } from 'src/score/core/review.service';
+import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
 
 export interface EssayEvaluation {

@@ -5,24 +5,33 @@ import {
   UploadedFile,
   UseGuards,
 } from '@nestjs/common';
-import { ScoreService, SubmissionLogInfo } from '../core/review.service';
-import { SubmissionRequestDto } from './dto/request/submission.request.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ScoreService,
+  SubmissionLogInfo,
+} from '../core/submission/review.service';
+import {
+  SubmissionRequestDto,
+  SubmissionRequestSchema,
+} from './dto/request/submission.request.dto';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { FileSizeValidationPipe } from 'src/common/validators/fileSize.validator';
 import { SubmissionResponseDto } from './dto/response/submission.response.dto';
 import { Combined } from 'src/common/decorators/api';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { Custom } from 'src/common/decorators/param';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 @Controller()
 @ApiTags('Essay Review')
-@ApiBearerAuth('Authorization')
-@UseGuards()
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 export class ScoreController {
   constructor(private readonly scoreService: ScoreService) {}
 
   @Post('submissions')
-  @Combined.FileUpload()
+  @Combined.FileUpload({
+    additionalType: SubmissionRequestSchema,
+  })
   @Combined.AlwaysOk({
     description: 'Submission result',
     type: SubmissionResponseDto,
@@ -32,6 +41,18 @@ export class ScoreController {
     @Body() dto: SubmissionRequestDto,
     @Custom.LogContext() logContext: LogContext<SubmissionLogInfo>,
   ): Promise<SubmissionResponseDto> {
+    if (!file) {
+      return SubmissionResponseDto.build(
+        {
+          success: false,
+          message: 'File is required',
+          data: null,
+        },
+        dto,
+        Date.now() - logContext.startTime,
+      );
+    }
+
     const submissionResult = await this.scoreService.submitForReview(
       file,
       dto,

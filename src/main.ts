@@ -2,11 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { initializeTelemetry } from './system/telemetry/telemetry.config';
+import './system/telemetry/telemetry.config';
 
 async function bootstrap() {
-  initializeTelemetry();
-
   const app = await NestFactory.create(AppModule);
 
   app.enableCors();
@@ -25,7 +23,14 @@ async function bootstrap() {
     .setTitle('AI Score Backend API')
     .setDescription('AI-powered submission evaluation API')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth({
+      description: `Please enter token in following format: Bearer <JWT>`,
+      name: 'Authorization',
+      bearerFormat: 'Bearer',
+      scheme: 'Bearer',
+      type: 'http',
+      in: 'Header',
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

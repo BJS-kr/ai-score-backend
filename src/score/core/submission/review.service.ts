@@ -1,18 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { SubmissionRequestDto } from '../router/dto/request/submission.request.dto';
+import { SubmissionRequestDto } from '../../router/dto/request/submission.request.dto';
 import {
   EssayEvaluation,
   ScoreRepository,
-} from '../IO/respositories/score.respository';
-import { AzureBlobStorageIntegration } from '../IO/integrations/azure-blob-storage.integration';
-import { AzureOpenAIIntegration } from '../IO/integrations/azure-openai.integration';
-import { VideoService } from '../IO/integrations/ffmpeg-video-processing.integration';
+} from '../../IO/respositories/score.respository';
+import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
+import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
+import { VideoService } from '../../IO/video/video.service';
 import { StrictReturn } from 'src/score/helper/stricter/strict.return';
 import { SubmissionResult } from './interfaces/submission.result';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { MediaType } from '@prisma/client';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { StricterHelper } from 'src/score/helper/stricter/stricter';
+import { REVIEW_PROMPT } from './resources/review.prompt';
 
 export type SubmissionLogInfo = {
   localVideoPath?: string;
@@ -165,8 +166,8 @@ export class ScoreService {
       message: 'Submission completed',
       data: {
         message: 'Submission completed',
-        videoUrl: videoUploadResult.data!.videoFileUrl!,
-        audioUrl: audioUploadResult.data!.audioFileUrl!,
+        videoUrl: videoUploadResult.data!.videoSasUrl!,
+        audioUrl: audioUploadResult.data!.audioSasUrl!,
         score: parsedReviewResult.data!.score,
         feedback: parsedReviewResult.data!.feedback,
         highlights: parsedReviewResult.data!.highlights,
@@ -299,15 +300,15 @@ export class ScoreService {
     );
 
     this.logger.info(
-      `Submission ${submissionId} completed
-       videoUrl: ${logContext.logInfo.videoFileUrl}
-       audioUrl: ${logContext.logInfo.audioFileUrl}
-       videoSasUrl: ${logContext.logInfo.videoSasUrl}
-       audioSasUrl: ${logContext.logInfo.audioSasUrl}
-       score: ${logContext.logInfo.score}
-       feedback: ${logContext.logInfo.feedback}
-       highlights: ${logContext.logInfo.highlights || []}
-       highlightedText: ${logContext.logInfo.highlightedText}
+      `Submission ${submissionId} completed\n
+       videoUrl: ${logContext.logInfo.videoFileUrl}\n
+       audioUrl: ${logContext.logInfo.audioFileUrl}\n
+       videoSasUrl: ${logContext.logInfo.videoSasUrl}\n
+       audioSasUrl: ${logContext.logInfo.audioSasUrl}\n
+       score: ${logContext.logInfo.score}\n
+       feedback: ${logContext.logInfo.feedback}\n
+       highlights: ${logContext.logInfo.highlights || []}\n
+       highlightedText: ${logContext.logInfo.highlightedText}\n
       `,
     );
   }
@@ -323,35 +324,6 @@ export class ScoreService {
   }
 
   private buildEvaluationPrompt(submitText: string): string {
-    return `
-      You are an English essay evaluation expert. Please evaluate the following essay and provide a structured response.
-
-      --Essay Text--
-
-      "${submitText}"
-
-      --End of Essay Text--
-
-      Please evaluate this essay based on:
-      1. Grammar and language usage
-      2. Content relevance to the topic
-      3. Organization and structure
-      4. Vocabulary usage
-      5. Overall coherence
-
-      Provide your response in the following JSON format:
-      {
-        "score": [integer from 0-10],
-        "feedback": "[detailed feedback with specific comments on grammar, content, structure, etc.]",
-        "highlights": ["word or sentence 1", "word or sentence 2", "..."]
-      }
-
-      Rules:
-      - Score must be an integer between 0 and 10
-      - If score is not 10, include the problematic words/sentences in highlights array
-      - Feedback should be constructive and specific
-      - Highlights should contain exact words or sentences from the original text that need attention
-      - Response must be valid JSON only, no additional text
-    `;
+    return REVIEW_PROMPT.replace('$ESSAY_TEXT$', submitText);
   }
 }

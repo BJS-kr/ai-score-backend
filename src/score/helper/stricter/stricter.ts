@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { StrictReturn } from 'src/score/helper/stricter/strict.return';
-import { SubmissionLogInfo } from 'src/score/core/review.service';
+import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
 import { ScoreRepository } from 'src/score/IO/respositories/score.respository';
 
 @Injectable()

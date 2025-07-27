@@ -5,6 +5,7 @@ import { setupGlobalGuardrail } from './system/setup/guardrail';
 import { APP_PROVIDERS } from './common/providers';
 import { ScoreModule } from './score/score.module';
 import { LoggerModule } from './common/logger/logger.module';
+import { PseudoAuthModule } from './pseudo-auth/pseudo-auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { LoggerModule } from './common/logger/logger.module';
     }),
     ScoreModule,
     LoggerModule,
+    PseudoAuthModule,
   ],
   providers: [...APP_PROVIDERS],
 })

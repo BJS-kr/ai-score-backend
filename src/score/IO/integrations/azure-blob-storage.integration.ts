@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  BlobServiceClient,
-  BlobSASPermissions,
-  generateBlobSASQueryParameters,
-  StorageSharedKeyCredential,
-  ContainerClient,
-} from '@azure/storage-blob';
+import { BlobServiceClient, BlobSASPermissions } from '@azure/storage-blob';
 import { readFile } from 'fs/promises';
 import { StrictReturn } from '../../helper/stricter/strict.return';
 import { ScoreRepository } from '../respositories/score.respository';
@@ -30,28 +24,31 @@ export class AzureBlobStorageIntegration {
   private readonly containerName: string;
   private readonly accountName: string;
   private readonly accountKey: string;
+  private readonly azureConnectionString: string;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly scoreRepository: ScoreRepository,
   ) {
+    this.accountKey = this.configService.get<string>('AZURE_ACCOUNT_KEY') || '';
     this.accountName =
       this.configService.get<string>('AZURE_ACCOUNT_NAME') || '';
-    this.accountKey = this.configService.get<string>('AZURE_ACCOUNT_KEY') || '';
     this.containerName =
       this.configService.get<string>('AZURE_CONTAINER') || '';
+    this.azureConnectionString =
+      this.configService.get<string>('AZURE_CONNECTION_STRING') || '';
 
-    if (!this.accountName || !this.accountKey || !this.containerName) {
+    if (
+      !this.accountName ||
+      !this.accountKey ||
+      !this.containerName ||
+      !this.azureConnectionString
+    ) {
       throw new Error('Azure Blob Storage configuration is missing');
     }
 
-    const sharedKeyCredential = new StorageSharedKeyCredential(
-      this.accountName,
-      this.accountKey,
-    );
-    this.blobServiceClient = new BlobServiceClient(
-      `https://${this.accountName}.blob.core.windows.net`,
-      sharedKeyCredential,
+    this.blobServiceClient = BlobServiceClient.fromConnectionString(
+      this.azureConnectionString,
     );
   }
 
@@ -61,24 +58,16 @@ export class AzureBlobStorageIntegration {
     mediaType: MediaType,
   ): Promise<StrictReturn<FileUploadResponse | null>> {
     const fileExtension = this.getFileExtension(filePath);
-    const uniqueFileName = `${submissionId}/${mediaType}.${fileExtension}`;
+    const uniqueFileName = `${submissionId}/${mediaType}${fileExtension}`;
     const containerClient = this.blobServiceClient.getContainerClient(
       this.containerName,
     );
-    const containerResult = await this.ensureContainerExists(containerClient);
-
-    if (!containerResult.success) {
-      return {
-        success: false,
-        error: containerResult.error,
-        data: null,
-      };
-    }
-
-    const blockBlobClient = containerClient.getBlockBlobClient(uniqueFileName);
+    await containerClient.createIfNotExists();
 
     const fileBuffer = await readFile(filePath);
     const fileSize = fileBuffer.length;
+
+    const blockBlobClient = containerClient.getBlockBlobClient(uniqueFileName);
     const uploadResponse = await blockBlobClient.uploadData(fileBuffer, {
       blobHTTPHeaders: {
         blobContentType:
@@ -99,25 +88,19 @@ export class AzureBlobStorageIntegration {
       };
     }
 
-    const fileUrl = blockBlobClient.url;
-    const sasUrlResult = this.generateSasUrl({
-      fileName: uniqueFileName,
-      expiresInHours: 24,
+    const sasUrl = await blockBlobClient.generateSasUrl({
+      // TODO: 설정 가능하게
+      expiresOn: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      permissions: BlobSASPermissions.parse('r'),
     });
 
-    if (!sasUrlResult.success || !sasUrlResult.data) {
-      return {
-        success: false,
-        error: sasUrlResult.error,
-        data: null,
-      };
-    }
+    const fileUrl = blockBlobClient.url;
 
     await this.scoreRepository.createMediaInfo(
       submissionId,
       mediaType,
       fileUrl,
-      sasUrlResult.data,
+      sasUrl,
       fileSize,
     );
 
@@ -127,63 +110,12 @@ export class AzureBlobStorageIntegration {
         mediaType === MediaType.VIDEO
           ? {
               videoFileUrl: fileUrl,
-              videoSasUrl: sasUrlResult.data,
+              videoSasUrl: sasUrl,
             }
           : {
               audioFileUrl: fileUrl,
-              audioSasUrl: sasUrlResult.data,
+              audioSasUrl: sasUrl,
             },
-    };
-  }
-
-  private generateSasUrl(
-    request: GenerateSasUrlRequest,
-  ): StrictReturn<string | null> {
-    const expiresOn = new Date();
-    expiresOn.setHours(expiresOn.getHours() + request.expiresInHours);
-
-    const sharedKeyCredential = new StorageSharedKeyCredential(
-      this.accountName,
-      this.accountKey,
-    );
-
-    const sasOptions = {
-      containerName: this.containerName,
-      blobName: request.fileName,
-      permissions: BlobSASPermissions.parse('r'),
-      expiresOn,
-    };
-
-    const sasToken = generateBlobSASQueryParameters(
-      sasOptions,
-      sharedKeyCredential,
-    ).toString();
-    const sasUrl = `https://${this.accountName}.blob.core.windows.net/${this.containerName}/${request.fileName}?${sasToken}`;
-
-    return {
-      success: true,
-      data: sasUrl,
-    };
-  }
-
-  private async ensureContainerExists(
-    containerClient: ContainerClient,
-  ): Promise<StrictReturn<boolean>> {
-    const response = await containerClient.createIfNotExists({
-      access: 'blob',
-    });
-
-    if (!response.succeeded) {
-      return {
-        success: false,
-        error: `failed to create container: ${response.errorCode}`,
-        data: false,
-      };
-    }
-
-    return {
-      success: true,
-      data: true,
     };
   }
 

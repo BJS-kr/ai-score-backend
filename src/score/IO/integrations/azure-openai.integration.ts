@@ -95,8 +95,9 @@ export class AzureOpenAIIntegration {
     content: string,
   ): StrictReturn<EssayEvaluation | null> {
     try {
+      const trimmedContent = this.trimJsonAnnotationIfExists(content);
       const evaluation: EssayEvaluation = JSON.parse(
-        content,
+        trimmedContent,
       ) as EssayEvaluation;
 
       if (!this.isValidEvaluation(evaluation)) {
@@ -154,5 +155,15 @@ export class AzureOpenAIIntegration {
     }
 
     return true;
+  }
+
+  private trimJsonAnnotationIfExists(content: string): string {
+    const trimmed = content.trim();
+    const jsonBlockRegex = /^```json\s*([\s\S]*?)\s*```$/;
+    const match = trimmed.match(jsonBlockRegex);
+    if (match) {
+      return match[1].trim();
+    }
+    return trimmed;
   }
 }
