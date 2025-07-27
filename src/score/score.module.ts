@@ -5,7 +5,7 @@ import { AzureBlobStorageIntegration } from './IO/integrations/azure-blob-storag
 import { VideoService } from './IO/video/video.service';
 import { AzureOpenAIIntegration } from './IO/integrations/azure-openai.integration';
 import { DbModule } from 'src/system/database/db.module';
-import { StricterHelper } from 'src/score/helper/stricter/stricter';
+import { Processor } from 'src/score/helper/processor/processor';
 import { ScoreRepository } from './IO/respositories/score.respository';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -32,7 +32,7 @@ import { v4 as uuidv4 } from 'uuid';
     AzureOpenAIIntegration,
     AzureBlobStorageIntegration,
     VideoService,
-    StricterHelper,
+    Processor,
   ],
 })
 export class ScoreModule {}

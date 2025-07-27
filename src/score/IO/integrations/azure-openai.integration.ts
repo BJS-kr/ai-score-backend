@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AzureOpenAI } from 'openai';
 import '@azure/openai/types';
-import { StrictReturn } from '../../helper/stricter/strict.return';
+import { StrictReturn } from '../../helper/processor/strict.return';
 import { EssayEvaluation } from '../respositories/score.respository';
 
 type RawReviewResponse = {

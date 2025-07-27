@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { StrictReturn } from 'src/score/helper/stricter/strict.return';
+import { StrictReturn } from 'src/score/helper/processor/strict.return';
 import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
 import { ScoreRepository } from 'src/score/IO/respositories/score.respository';
 
 @Injectable()
-export class StricterHelper {
+export class Processor {
   constructor(
     private readonly logger: LoggerService,
     private readonly scoreRepository: ScoreRepository,

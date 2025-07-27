@@ -7,12 +7,12 @@ import {
 import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
 import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
 import { VideoService } from '../../IO/video/video.service';
-import { StrictReturn } from 'src/score/helper/stricter/strict.return';
+import { StrictReturn } from 'src/score/helper/processor/strict.return';
 import { SubmissionResult } from './interfaces/submission.result';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { MediaType } from '@prisma/client';
 import { LogContext } from 'src/common/decorators/param/log.context';
-import { StricterHelper } from 'src/score/helper/stricter/stricter';
+import { Processor } from 'src/score/helper/processor/processor';
 import { REVIEW_PROMPT } from './resources/review.prompt';
 
 export type SubmissionLogInfo = {
@@ -38,7 +38,7 @@ export class ScoreService {
     private readonly azureOpenAIIntegration: AzureOpenAIIntegration,
     private readonly videoService: VideoService,
     private readonly logger: LoggerService,
-    private readonly stricter: StricterHelper,
+    private readonly processor: Processor,
   ) {}
 
   async submitForReview(
@@ -54,7 +54,7 @@ export class ScoreService {
       dto.componentType,
     );
 
-    if (this.stricter.isFail(alreadySubmittedResult)) {
+    if (this.processor.isFail(alreadySubmittedResult)) {
       return alreadySubmittedResult;
     }
 
@@ -84,7 +84,7 @@ export class ScoreService {
       logContext,
     );
 
-    if (this.stricter.isFail(processedVideoResult)) {
+    if (this.processor.isFail(processedVideoResult)) {
       return processedVideoResult;
     }
 
@@ -97,7 +97,7 @@ export class ScoreService {
       logContext,
     );
 
-    if (this.stricter.isFail(videoUploadResult)) {
+    if (this.processor.isFail(videoUploadResult)) {
       return videoUploadResult;
     }
 
@@ -110,7 +110,7 @@ export class ScoreService {
       logContext,
     );
 
-    if (this.stricter.isFail(audioUploadResult)) {
+    if (this.processor.isFail(audioUploadResult)) {
       return audioUploadResult;
     }
 
@@ -123,7 +123,7 @@ export class ScoreService {
       logContext,
     );
 
-    if (this.stricter.isFail(rawReviewResult)) {
+    if (this.processor.isFail(rawReviewResult)) {
       return rawReviewResult;
     }
 
@@ -136,7 +136,7 @@ export class ScoreService {
       rawReviewResult.data!.reviewResponse,
     );
 
-    if (this.stricter.isFail(parsedReviewResult)) {
+    if (this.processor.isFail(parsedReviewResult)) {
       return parsedReviewResult;
     }
 
@@ -148,7 +148,7 @@ export class ScoreService {
       parsedReviewResult.data!.highlights,
     );
 
-    this.stricter.accumulateContextInfo(logContext, {
+    this.processor.accumulateContextInfo(logContext, {
       highlightedText,
     });
 
@@ -208,7 +208,7 @@ export class ScoreService {
     submissionId: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    return this.stricter.process(
+    return this.processor.process(
       await this.videoService.processVideo({
         inputFilePath: videoPath,
         submissionId,
@@ -225,7 +225,7 @@ export class ScoreService {
     localVideoPath: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    return this.stricter.process(
+    return this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
         submissionId,
         localVideoPath,
@@ -243,7 +243,7 @@ export class ScoreService {
     localAudioPath: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    return this.stricter.process(
+    return this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
         submissionId,
         localAudioPath,
@@ -261,7 +261,7 @@ export class ScoreService {
     submitText: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    return this.stricter.process(
+    return this.processor.process(
       await this.azureOpenAIIntegration.getRawReviewResponse(
         this.buildEvaluationPrompt(submitText),
       ),
@@ -277,7 +277,7 @@ export class ScoreService {
     logContext: LogContext<SubmissionLogInfo>,
     rawReviewResponse: string,
   ) {
-    return this.stricter.process(
+    return this.processor.process(
       this.azureOpenAIIntegration.parseAndValidateResponse(rawReviewResponse),
       submissionId,
       logContext,

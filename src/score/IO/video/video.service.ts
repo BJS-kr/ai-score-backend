@@ -5,7 +5,7 @@ import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as ffprobeStatic from 'ffprobe-static';
-import { StrictReturn } from '../../helper/stricter/strict.return';
+import { StrictReturn } from '../../helper/processor/strict.return';
 const ffmpegStatic = require('ffmpeg-static');
 
 export interface VideoProcessingRequest {

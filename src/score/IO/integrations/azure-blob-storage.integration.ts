@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BlobServiceClient, BlobSASPermissions } from '@azure/storage-blob';
 import { readFile } from 'fs/promises';
-import { StrictReturn } from '../../helper/stricter/strict.return';
+import { StrictReturn } from '../../helper/processor/strict.return';
 import { ScoreRepository } from '../respositories/score.respository';
 import { MediaType } from '@prisma/client';
 
