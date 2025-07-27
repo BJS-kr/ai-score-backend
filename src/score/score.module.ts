@@ -10,6 +10,8 @@ import { ScoreRepository } from './IO/respositories/score.respository';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import { ExternalCallLogRepository } from './IO/respositories/external.call.log.repository';
+import { ReviewParser } from './core/submission/review.parser';
 
 @Module({
   imports: [
@@ -29,10 +31,12 @@ import { v4 as uuidv4 } from 'uuid';
   providers: [
     ScoreService,
     ScoreRepository,
+    ExternalCallLogRepository,
     AzureOpenAIIntegration,
     AzureBlobStorageIntegration,
     VideoService,
     Processor,
+    ReviewParser,
   ],
 })
 export class ScoreModule {}

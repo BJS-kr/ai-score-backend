@@ -4,6 +4,11 @@ import { AzureOpenAI } from 'openai';
 import '@azure/openai/types';
 import { StrictReturn } from '../../helper/processor/strict.return';
 import { EssayEvaluation } from '../respositories/score.respository';
+import { LoggerService } from 'src/common/logger/logger.service';
+import { LogContext } from 'src/common/decorators/param/log.context';
+import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
+import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
+import { CONTEXT, ERROR_MESSAGES, TASK_NAMES } from './constant';
 
 type RawReviewResponse = {
   reviewPrompt: string;
@@ -15,7 +20,11 @@ export class AzureOpenAIIntegration {
   private readonly openAIClient: AzureOpenAI;
   private readonly deploymentName: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
+    private readonly externalCallLogRepository: ExternalCallLogRepository,
+  ) {
     const endpoint = this.configService.get<string>('AZURE_ENDPOINT_URL');
     const apiKey = this.configService.get<string>('AZURE_ENDPOINT_KEY');
     const apiVersion =
@@ -37,8 +46,9 @@ export class AzureOpenAIIntegration {
 
   async getRawReviewResponse(
     reviewPrompt: string,
+    logContext: LogContext<SubmissionLogInfo>,
   ): Promise<StrictReturn<RawReviewResponse | null>> {
-    const responseResult = await this.callAzureOpenAI(reviewPrompt);
+    const responseResult = await this.callAzureOpenAI(reviewPrompt, logContext);
 
     if (!responseResult.success) {
       return {
@@ -57,7 +67,15 @@ export class AzureOpenAIIntegration {
     };
   }
 
-  private async callAzureOpenAI(prompt: string): Promise<StrictReturn<string>> {
+  private async callAzureOpenAI(
+    prompt: string,
+    logContext: LogContext<SubmissionLogInfo>,
+  ): Promise<StrictReturn<string>> {
+    this.logger.trace('Calling Azure OpenAI with prompt', 'azure-openai', {
+      prompt,
+    });
+
+    const start = Date.now();
     const response = await this.openAIClient.chat.completions.create({
       model: '',
       messages: [
@@ -68,22 +86,51 @@ export class AzureOpenAIIntegration {
       ],
     });
 
+    const latency = Date.now() - start;
+
     if (!response.choices || response.choices.length === 0) {
+      await this.logExternalCall(
+        logContext,
+        latency,
+        false,
+        CONTEXT.AZURE_OPENAI,
+        TASK_NAMES.AZURE_OPENAI_REVIEW,
+        ERROR_MESSAGES.AZURE_OPENAI.NO_RESPONSE,
+      );
+
       return {
         success: false,
-        error: 'No response from Azure OpenAI',
+        error: ERROR_MESSAGES.AZURE_OPENAI.NO_RESPONSE,
         data: '',
       };
     }
 
     const content = response.choices[0].message?.content;
     if (!content) {
+      await this.logExternalCall(
+        logContext,
+        latency,
+        false,
+        CONTEXT.AZURE_OPENAI,
+        TASK_NAMES.AZURE_OPENAI_REVIEW,
+        ERROR_MESSAGES.AZURE_OPENAI.EMPTY_RESPONSE,
+      );
+
       return {
         success: false,
-        error: 'Empty response content from Azure OpenAI',
+        error: ERROR_MESSAGES.AZURE_OPENAI.EMPTY_RESPONSE,
         data: '',
       };
     }
+
+    await this.logExternalCall(
+      logContext,
+      latency,
+      true,
+      CONTEXT.AZURE_OPENAI,
+      TASK_NAMES.AZURE_OPENAI_REVIEW,
+      'Successfully got response from Azure OpenAI',
+    );
 
     return {
       success: true,
@@ -91,79 +138,22 @@ export class AzureOpenAIIntegration {
     };
   }
 
-  parseAndValidateResponse(
-    content: string,
-  ): StrictReturn<EssayEvaluation | null> {
-    try {
-      const trimmedContent = this.trimJsonAnnotationIfExists(content);
-      const evaluation: EssayEvaluation = JSON.parse(
-        trimmedContent,
-      ) as EssayEvaluation;
-
-      if (!this.isValidEvaluation(evaluation)) {
-        return {
-          success: false,
-          error: 'Invalid response format',
-          data: null,
-        };
-      }
-
-      // Ensure highlights are strings
-      const validHighlights = evaluation.highlights.filter(
-        (highlight) => typeof highlight === 'string' && highlight.trim(),
-      );
-
-      return {
-        success: true,
-        data: {
-          score: Math.round(evaluation.score),
-          feedback: evaluation.feedback.trim(),
-          highlights: validHighlights,
-        },
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : JSON.stringify(error);
-
-      return {
-        success: false,
-        error: `Response parsing failed: ${errorMessage}`,
-        data: null,
-      };
-    }
-  }
-
-  private isValidEvaluation(value: EssayEvaluation): value is EssayEvaluation {
-    if (!value) {
-      return false;
-    }
-
-    if (typeof value.score !== 'number') {
-      return false;
-    }
-
-    if (value.score < 0 || value.score > 10) {
-      return false;
-    }
-
-    if (typeof value.feedback !== 'string' || !value.feedback.trim()) {
-      return false;
-    }
-
-    if (!Array.isArray(value.highlights)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private trimJsonAnnotationIfExists(content: string): string {
-    const trimmed = content.trim();
-    const jsonBlockRegex = /^```json\s*([\s\S]*?)\s*```$/;
-    const match = trimmed.match(jsonBlockRegex);
-    if (match) {
-      return match[1].trim();
-    }
-    return trimmed;
+  private logExternalCall(
+    logContext: LogContext<SubmissionLogInfo>,
+    latency: number,
+    success: boolean,
+    context: string,
+    taskName: string,
+    description: string,
+  ) {
+    this.logger.trace(description, context);
+    return this.externalCallLogRepository.createLog({
+      traceId: logContext.traceId,
+      context,
+      success,
+      latency,
+      taskName,
+      description,
+    });
   }
 }

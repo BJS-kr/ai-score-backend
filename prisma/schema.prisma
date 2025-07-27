@@ -96,6 +96,22 @@ model SubmissionLog {
   @@map("submission_logs")
 }
 
+model ExternalCallLog {
+  traceId String @id @map("trace_id")
+  context String @map("context")
+  taskName String @map("task_name")
+  description String? @map("description") @db.Text
+  requestData Json? @map("request_data") @db.JsonB
+  responseData Json? @map("response_data") @db.JsonB
+  success Boolean  @map("success")
+  latency Int @map("latency")
+  errorMessage String? @map("error_message") @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+
+  @@map("external_call_logs")
+}
+
 model Revision {
   id           String         @id @default(uuid())
   submissionId String         @map("submission_id")

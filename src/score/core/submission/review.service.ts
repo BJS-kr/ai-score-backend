@@ -14,6 +14,7 @@ import { MediaType } from '@prisma/client';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { Processor } from 'src/score/helper/processor/processor';
 import { REVIEW_PROMPT } from './resources/review.prompt';
+import { ReviewParser } from './review.parser';
 
 export type SubmissionLogInfo = {
   localVideoPath?: string;
@@ -38,6 +39,7 @@ export class ScoreService {
     private readonly azureOpenAIIntegration: AzureOpenAIIntegration,
     private readonly videoService: VideoService,
     private readonly logger: LoggerService,
+    private readonly reviewParser: ReviewParser,
     private readonly processor: Processor,
   ) {}
 
@@ -264,6 +266,7 @@ export class ScoreService {
     return this.processor.process(
       await this.azureOpenAIIntegration.getRawReviewResponse(
         this.buildEvaluationPrompt(submitText),
+        logContext,
       ),
       submissionId,
       logContext,
@@ -278,7 +281,7 @@ export class ScoreService {
     rawReviewResponse: string,
   ) {
     return this.processor.process(
-      this.azureOpenAIIntegration.parseAndValidateResponse(rawReviewResponse),
+      this.reviewParser.parseAndValidateReview(rawReviewResponse),
       submissionId,
       logContext,
       ['score', 'feedback', 'highlights'],
