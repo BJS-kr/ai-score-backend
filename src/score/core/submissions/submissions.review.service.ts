@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { SubmissionRequestDto } from '../../router/dto/request/submission.request.dto';
+import { SubmissionRequestDto } from '../../router/submissions/dto/request/submission.request.dto';
 import {
   EssayEvaluation,
-  ScoreRepository,
-} from '../../IO/respositories/score.respository';
+  SubmissionRepository,
+} from '../../IO/respositories/submission.respository';
 import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
 import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
 import { VideoService } from '../../IO/video/video.service';
@@ -14,32 +14,20 @@ import {
 import { SubmissionResult } from './interfaces/submission.result';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { MediaType } from '@prisma/client';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import {
+  LogContext,
+  NewSubmissionLogInfo,
+  ReviewLogInfo,
+} from 'src/common/decorators/param/log.context';
 import { Processor } from 'src/score/helper/processor/processor';
 import { REVIEW_PROMPT } from './resources/review.prompt';
 import { ReviewParser } from './submissions.review.parser';
 import { Transactional } from '@nestjs-cls/transactional';
 
-export type SubmissionLogInfo = {
-  submissionId: string;
-  localVideoPath?: string;
-  localAudioPath?: string;
-  videoFileUrl?: string;
-  videoSasUrl?: string;
-  audioFileUrl?: string;
-  audioSasUrl?: string;
-  reviewPrompt?: string;
-  reviewResponse?: string;
-  score?: number;
-  feedback?: string;
-  highlights?: string[];
-  highlightedText?: string;
-};
-
 @Injectable()
 export class SubmissionsReviewService {
   constructor(
-    private readonly scoreRepository: ScoreRepository,
+    private readonly submissionRepository: SubmissionRepository,
     private readonly azureBlobStorageIntegration: AzureBlobStorageIntegration,
     private readonly azureOpenAIIntegration: AzureOpenAIIntegration,
     private readonly videoService: VideoService,
@@ -49,10 +37,10 @@ export class SubmissionsReviewService {
   ) {}
 
   @Transactional()
-  async submitForReview(
+  async newSubmission(
     video: Express.Multer.File,
     dto: SubmissionRequestDto,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext<NewSubmissionLogInfo>,
   ): Promise<StrictReturn<SubmissionResult>> {
     /**
      * check existing submission
@@ -66,6 +54,11 @@ export class SubmissionsReviewService {
       return alreadySubmittedResult;
     }
 
+    const submissionId = await this.submissionRepository.createSubmission(
+      dto,
+      logContext,
+    );
+
     /**
      * Process start
      *
@@ -77,11 +70,6 @@ export class SubmissionsReviewService {
      * 6. Parse review response
      * 7. Highlight text
      */
-
-    const submissionId = await this.scoreRepository.createSubmission(
-      dto,
-      logContext,
-    );
 
     this.processor.accumulateContextInfo(logContext, {
       submissionId,
@@ -123,11 +111,25 @@ export class SubmissionsReviewService {
       return audioUploadResult;
     }
 
+    return this.submitForReview(
+      dto.submitText,
+      logContext,
+      videoUploadResult.data.videoSasUrl!,
+      audioUploadResult.data.audioSasUrl!,
+    );
+  }
+
+  async submitForReview(
+    submitText: string,
+    logContext: LogContext<ReviewLogInfo>,
+    videoSasUrl: string,
+    audioSasUrl: string,
+  ): Promise<StrictReturn<SubmissionResult>> {
     /**
      * Get review prompt
      */
     const rawReviewResult = await this.getRawReviewResponse(
-      dto.submitText,
+      submitText,
       logContext,
     );
 
@@ -151,7 +153,7 @@ export class SubmissionsReviewService {
      * Highlight text
      */
     const highlightedText = this.highlightText(
-      dto.submitText,
+      submitText,
       parsedReviewResult.data.highlights,
     );
 
@@ -169,8 +171,8 @@ export class SubmissionsReviewService {
       message: 'Submission completed',
       data: {
         message: 'Submission completed',
-        videoUrl: videoUploadResult.data.videoSasUrl!,
-        audioUrl: audioUploadResult.data.audioSasUrl!,
+        videoUrl: videoSasUrl,
+        audioUrl: audioSasUrl,
         score: parsedReviewResult.data.score,
         feedback: parsedReviewResult.data.feedback,
         highlights: parsedReviewResult.data.highlights,
@@ -184,7 +186,7 @@ export class SubmissionsReviewService {
     componentType: string,
   ): Promise<StrictReturn<boolean>> {
     const alreadySubmittedRecord =
-      await this.scoreRepository.checkAlreadySubmitted(
+      await this.submissionRepository.checkAlreadySubmitted(
         studentId,
         componentType,
       );
@@ -207,7 +209,7 @@ export class SubmissionsReviewService {
 
   private async processVideo(
     videoPath: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     return this.processor.process(
       await this.videoService.processVideo({
@@ -222,7 +224,7 @@ export class SubmissionsReviewService {
 
   private async uploadVideo(
     localVideoPath: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     const result = await this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
@@ -239,7 +241,7 @@ export class SubmissionsReviewService {
       return result;
     }
 
-    await this.scoreRepository.createMediaInfo(
+    await this.submissionRepository.createSubmissionMedia(
       logContext.logInfo.submissionId,
       MediaType.VIDEO,
       result.data.videoFileUrl!,
@@ -252,7 +254,7 @@ export class SubmissionsReviewService {
 
   private async uploadAudio(
     localAudioPath: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     const result = await this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
@@ -269,7 +271,7 @@ export class SubmissionsReviewService {
       return result;
     }
 
-    await this.scoreRepository.createMediaInfo(
+    await this.submissionRepository.createSubmissionMedia(
       logContext.logInfo.submissionId,
       MediaType.AUDIO,
       result.data.audioFileUrl!,
@@ -282,7 +284,7 @@ export class SubmissionsReviewService {
 
   private async getRawReviewResponse(
     submitText: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
   ) {
     return this.processor.process(
       await this.azureOpenAIIntegration.getRawReviewResponse(
@@ -297,7 +299,7 @@ export class SubmissionsReviewService {
 
   private async parseReviewResponse(
     rawReviewResponse: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
   ) {
     return this.processor.process(
       this.reviewParser.parseAndValidateReview(rawReviewResponse),
@@ -309,9 +311,9 @@ export class SubmissionsReviewService {
 
   private async completeSubmission(
     evaluation: EssayEvaluation,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
   ) {
-    await this.scoreRepository.completeSubmission(
+    await this.submissionRepository.completeSubmission(
       logContext.logInfo.submissionId,
       evaluation.score,
       evaluation.feedback,

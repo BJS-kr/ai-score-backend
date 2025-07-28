@@ -13,16 +13,6 @@ export class PseudoAuthController {
     private readonly prismaService: PrismaService,
   ) {}
   @Post('register')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        studentName: {
-          type: 'string',
-        },
-      },
-    },
-  })
   @ApiOkResponse({
     schema: {
       type: 'object',
@@ -37,11 +27,11 @@ export class PseudoAuthController {
     },
     description: 'The access token',
   })
-  async register(@Body() body: { studentName: string }) {
-    return this.createStudentAndAccessToken(body.studentName);
+  async register() {
+    return this.createStudentAndAccessToken();
   }
 
-  async createStudentAndAccessToken(studentName: string) {
+  async createStudentAndAccessToken() {
     const jwtSecret = this.configService.get<string>('JWT_SECRET');
     if (!jwtSecret) {
       throw new Error('JWT_SECRET is not set');
@@ -51,7 +41,6 @@ export class PseudoAuthController {
     await this.prismaService.student.create({
       data: {
         id: studentId,
-        studentName,
       },
     });
 

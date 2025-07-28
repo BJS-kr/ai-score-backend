@@ -10,8 +10,10 @@ import { StrictReturn } from '../../helper/processor/strict.return';
 import { MediaType } from '@prisma/client';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
-import { LogContext } from 'src/common/decorators/param/log.context';
-import { SubmissionLogInfo } from 'src/score/core/submission/submissions.review.service';
+import {
+  LogContext,
+  NewSubmissionLogInfo,
+} from 'src/common/decorators/param/log.context';
 import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
 
 export interface FileUploadResponse {
@@ -40,7 +42,7 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
   async uploadFile(
     filePath: string,
     mediaType: MediaType,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext<NewSubmissionLogInfo>,
   ): Promise<StrictReturn<FileUploadResponse>> {
     const uniqueFileName = this.generateFileName(
       filePath,
@@ -182,7 +184,7 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
   }
 
   private logExternalCall(
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext<NewSubmissionLogInfo>,
     latency: number,
     success: boolean,
     context: string,

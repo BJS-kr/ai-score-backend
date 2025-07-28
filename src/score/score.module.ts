@@ -1,17 +1,22 @@
 import { Module } from '@nestjs/common';
-import { ScoreController } from './router/score.controller';
-import { ScoreService } from './core/submission/submissions.review.service';
+import { SubmissionController } from './router/submissions/submissions.controller';
+import { SubmissionsReviewService } from './core/submissions/submissions.review.service';
 import { AzureBlobStorageIntegration } from './IO/integrations/azure-blob-storage.integration';
 import { VideoService } from './IO/video/video.service';
 import { AzureOpenAIIntegration } from './IO/integrations/azure-openai.integration';
 import { DbModule } from 'src/system/database/db.module';
 import { Processor } from 'src/score/helper/processor/processor';
-import { ScoreRepository } from './IO/respositories/score.respository';
+import { SubmissionRepository } from './IO/respositories/submission.respository';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { ExternalCallLogRepository } from './IO/respositories/external.call.log.repository';
-import { ReviewParser } from './core/submission/submissions.review.parser';
+import { ReviewParser } from './core/submissions/submissions.review.parser';
+import { SubmissionsQueryService } from './core/submissions/submissions.query.service';
+import { RevisionController } from './router/revisions/revision.controller';
+import { RevisionReviewService } from './core/revisions/revision.review.service';
+import { RevisionRepository } from './IO/respositories/revision.repository';
+import { RevisionQueryService } from './core/revisions/revision.query.service';
 
 @Module({
   imports: [
@@ -27,16 +32,37 @@ import { ReviewParser } from './core/submission/submissions.review.parser';
       }),
     }),
   ],
-  controllers: [ScoreController],
+  controllers: [SubmissionController, RevisionController],
   providers: [
-    ScoreService,
-    ScoreRepository,
+    /**
+     * Services
+     */
+    /** Submission */
+    SubmissionsReviewService,
+    SubmissionsQueryService,
+    /** Revision */
+    RevisionReviewService,
+    RevisionQueryService,
+    /**
+     * Repositories
+     */
+    SubmissionRepository,
     ExternalCallLogRepository,
+    RevisionRepository,
+    /**
+     * Integrations
+     */
     AzureOpenAIIntegration,
     AzureBlobStorageIntegration,
+    /**
+     * Logics
+     */
     VideoService,
-    Processor,
     ReviewParser,
+    /**
+     * Helpers
+     */
+    Processor,
   ],
 })
 export class ScoreModule {}

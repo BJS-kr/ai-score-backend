@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { IsString } from 'class-validator';
+import { IsString, IsUUID } from 'class-validator';
 /**
  * multipart/form-data 형식에 body를 같이 넣으려고하니
  * SchemaObject 형식으로 전달하는 것이 가장 쉬워보여
@@ -11,7 +11,7 @@ export class SubmissionRequestDto {
     type: 'string',
     description: 'The student ID',
   })
-  @IsString()
+  @IsUUID()
   studentId: string;
 
   @ApiProperty({

@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/system/database/prisma.service';
-import { SubmissionRequestDto } from '../../router/dto/request/submission.request.dto';
+import { SubmissionRequestDto } from '../../router/submissions/dto/request/submission.request.dto';
 import { v4 as uuidv4 } from 'uuid';
 import {
   MediaType,
   SubmissionLogStatus,
   SubmissionStatus,
 } from '@prisma/client';
-import { SubmissionLogInfo } from 'src/score/core/submission/submissions.review.service';
-import { LogContext } from 'src/common/decorators/param/log.context';
-import { TxHost } from 'src/system/database/tx.host';
+import {
+  LogContext,
+  NewSubmissionLogInfo,
+} from 'src/common/decorators/param/log.context';
+import { Pagination } from 'src/common/decorators/param/pagination';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 
 export interface EssayEvaluation {
   score: number;
@@ -18,15 +22,15 @@ export interface EssayEvaluation {
 }
 
 @Injectable()
-export class ScoreRepository {
+export class SubmissionRepository {
   constructor(
     private readonly readClient: PrismaService,
-    private readonly writeClient: TxHost,
+    private readonly writeClient: TransactionHost<TransactionalAdapterPrisma>,
   ) {}
 
   async createSubmission(
     dto: SubmissionRequestDto,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     const submissionId = await this.writeClient.tx.submission
       .create({
@@ -36,6 +40,7 @@ export class ScoreRepository {
         data: {
           id: uuidv4(),
           studentId: dto.studentId,
+          studentName: dto.studentName,
           componentType: dto.componentType,
           submitText: dto.submitText,
         },
@@ -46,7 +51,6 @@ export class ScoreRepository {
       data: {
         traceId: logContext.traceId,
         submissionId,
-        status: SubmissionLogStatus.PENDING,
         requestUri: logContext.requestUri,
       },
     });
@@ -54,12 +58,27 @@ export class ScoreRepository {
     return submissionId;
   }
 
+  async getSubmissions(pagination: Pagination, status?: SubmissionStatus) {
+    return this.readClient.submission.findMany({
+      ...pagination,
+      where: {
+        status,
+      },
+    });
+  }
+
+  async getSubmission(submissionId: string) {
+    return this.readClient.submission.findUnique({
+      where: { id: submissionId },
+    });
+  }
+
   async completeSubmission(
     submissionId: string,
     score: number,
     feedback: string,
     highlights: string[],
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
   ) {
     await this.writeClient.tx.submission.update({
       where: { id: submissionId },
@@ -114,7 +133,7 @@ export class ScoreRepository {
     });
   }
 
-  createMediaInfo(
+  createSubmissionMedia(
     submissionId: string,
     mediaType: MediaType,
     fileUrl: string,
@@ -130,6 +149,12 @@ export class ScoreRepository {
         sasUrl,
         fileSize,
       },
+    });
+  }
+
+  getSubmissionMedia(submissionId: string, mediaType: MediaType) {
+    return this.readClient.submissionMedia.findFirst({
+      where: { submissionId, mediaType },
     });
   }
 }

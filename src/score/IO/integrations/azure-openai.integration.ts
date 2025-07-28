@@ -4,7 +4,6 @@ import { AzureOpenAI } from 'openai';
 import { StrictReturn } from '../../helper/processor/strict.return';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
-import { SubmissionLogInfo } from 'src/score/core/submission/submissions.review.service';
 import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
 import '@azure/openai/types';
@@ -27,7 +26,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
 
   async getRawReviewResponse(
     reviewPrompt: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
   ): Promise<StrictReturn<RawReviewResponse>> {
     const responseResult = await this.callAzureOpenAI(reviewPrompt, logContext);
 
@@ -49,7 +48,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
 
   private async callAzureOpenAI(
     prompt: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
   ): Promise<StrictReturn<string>> {
     this.logger.trace(
       'Calling Azure OpenAI with prompt',
@@ -121,7 +120,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
   }
 
   private logExternalCall(
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
     latency: number,
     success: boolean,
     context: string,

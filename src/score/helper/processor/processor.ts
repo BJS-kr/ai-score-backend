@@ -1,21 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import {
+  LogContext,
+  ReviewLogInfo,
+} from 'src/common/decorators/param/log.context';
 import { LoggerService } from 'src/common/logger/logger.service';
 import {
   isSuccess,
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
-import { SubmissionLogInfo } from 'src/score/core/submission/submissions.review.service';
-import { ScoreRepository } from 'src/score/IO/respositories/score.respository';
+import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 
 @Injectable()
 export class Processor {
   constructor(
     private readonly logger: LoggerService,
-    private readonly scoreRepository: ScoreRepository,
+    private readonly submissionRepository: SubmissionRepository,
   ) {}
 
-  accumulateContextInfo<T extends Record<string, unknown>>(
+  accumulateContextInfo<T extends ReviewLogInfo>(
     logContext: LogContext<T>,
     newInfo: Partial<T>,
   ) {
@@ -30,11 +32,11 @@ export class Processor {
   }: {
     internalError: string;
     externalError: string;
-    logContext: LogContext<SubmissionLogInfo>;
+    logContext: LogContext;
   }): Promise<StrictReturn<T>> {
     this.logger.trace(internalError);
 
-    await this.scoreRepository.failSubmission(
+    await this.submissionRepository.failSubmission(
       logContext.logInfo.submissionId,
       logContext.traceId,
       logContext.startTime,
@@ -49,7 +51,7 @@ export class Processor {
 
   async process<T>(
     source: StrictReturn<T>,
-    logContext: LogContext<SubmissionLogInfo>,
+    logContext: LogContext,
     keys: (keyof NonNullable<T>)[],
     step: string,
   ): Promise<StrictReturn<T>> {

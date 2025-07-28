@@ -13,7 +13,6 @@ CREATE TYPE "RevisionStatus" AS ENUM ('PENDING', 'FAILED', 'COMPLETED');
 -- CreateTable
 CREATE TABLE "students" (
     "id" TEXT NOT NULL,
-    "student_name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -24,6 +23,7 @@ CREATE TABLE "students" (
 CREATE TABLE "submissions" (
     "id" TEXT NOT NULL,
     "student_id" TEXT NOT NULL,
+    "student_name" TEXT NOT NULL,
     "component_type" TEXT NOT NULL,
     "submit_text" TEXT NOT NULL,
     "status" "SubmissionStatus" NOT NULL DEFAULT 'PENDING',
@@ -57,16 +57,39 @@ CREATE TABLE "submission_logs" (
     "request_uri" TEXT NOT NULL,
     "status" "SubmissionLogStatus" NOT NULL DEFAULT 'PENDING',
     "latency" INTEGER,
+    "local_video_path" TEXT,
+    "local_audio_path" TEXT,
     "video_file_url" TEXT,
     "video_sas_url" TEXT,
     "audio_file_url" TEXT,
     "audio_sas_url" TEXT,
     "review_prompt" TEXT,
     "review_response" TEXT,
+    "score" INTEGER,
+    "feedback" TEXT,
+    "highlights" JSONB,
+    "highlighted_text" TEXT,
     "error_message" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "submission_logs_pkey" PRIMARY KEY ("trace_id")
+);
+
+-- CreateTable
+CREATE TABLE "external_call_logs" (
+    "trace_id" TEXT NOT NULL,
+    "submission_id" TEXT NOT NULL,
+    "context" TEXT NOT NULL,
+    "task_name" TEXT NOT NULL,
+    "description" TEXT,
+    "request_data" JSONB,
+    "response_data" JSONB,
+    "success" BOOLEAN NOT NULL,
+    "latency" INTEGER NOT NULL,
+    "error_message" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "external_call_logs_pkey" PRIMARY KEY ("trace_id")
 );
 
 -- CreateTable
@@ -158,6 +181,9 @@ ALTER TABLE "submission_media" ADD CONSTRAINT "submission_media_submission_id_fk
 
 -- AddForeignKey
 ALTER TABLE "submission_logs" ADD CONSTRAINT "submission_logs_submission_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "external_call_logs" ADD CONSTRAINT "external_call_logs_submission_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "revisions" ADD CONSTRAINT "revisions_submission_id_fkey" FOREIGN KEY ("submission_id") REFERENCES "submissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -147,12 +147,14 @@ export const createPaginationClass = (
       description: '정렬 기준 필드와 방향',
       ...(options.possibleSorts
         ? {
-            enum: options.possibleSorts,
+            enum: options.possibleSorts.reduce((acc, field) => {
+              return [...acc, `${field},DESC`, `${field},ASC`];
+            }, [] as string[]),
           }
         : { type: String }),
       ...(options.defaults?.sort && {
-        default: options.defaults.sort,
-        example: options.defaults.sort,
+        default: `${options.defaults.sort},DESC`,
+        example: `${options.defaults.sort},DESC`,
       }),
       required: false,
     })
