@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/system/database/prisma.service';
+import { TxHost } from 'src/system/database/tx.host';
 
 @Injectable()
 export class ExternalCallLogRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly readClient: PrismaService,
+    private readonly writeClient: TxHost,
+  ) {}
 
   createLog({
     traceId,
@@ -27,7 +31,7 @@ export class ExternalCallLogRepository {
     responseData?: Prisma.NullableJsonNullValueInput;
     errorMessage?: string;
   }) {
-    return this.prisma.externalCallLog.create({
+    return this.writeClient.tx.externalCallLog.create({
       data: {
         traceId,
         context,

@@ -15,6 +15,7 @@ import { LogContext } from 'src/common/decorators/param/log.context';
 import { Processor } from 'src/score/helper/processor/processor';
 import { REVIEW_PROMPT } from './resources/review.prompt';
 import { ReviewParser } from './review.parser';
+import { Transactional } from '@nestjs-cls/transactional';
 
 export type SubmissionLogInfo = {
   localVideoPath?: string;
@@ -43,6 +44,7 @@ export class ScoreService {
     private readonly processor: Processor,
   ) {}
 
+  @Transactional()
   async submitForReview(
     video: Express.Multer.File,
     dto: SubmissionRequestDto,

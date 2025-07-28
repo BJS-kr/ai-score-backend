@@ -9,6 +9,7 @@ import {
 } from '@prisma/client';
 import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
+import { TxHost } from 'src/system/database/tx.host';
 
 export interface EssayEvaluation {
   score: number;
@@ -18,13 +19,16 @@ export interface EssayEvaluation {
 
 @Injectable()
 export class ScoreRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly readClient: PrismaService,
+    private readonly writeClient: TxHost,
+  ) {}
 
   async createSubmission(
     dto: SubmissionRequestDto,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    const submissionId = await this.prisma.submission
+    const submissionId = await this.writeClient.tx.submission
       .create({
         select: {
           id: true,
@@ -38,7 +42,7 @@ export class ScoreRepository {
       })
       .then(({ id }) => id);
 
-    await this.prisma.submissionLog.create({
+    await this.writeClient.tx.submissionLog.create({
       data: {
         traceId: logContext.traceId,
         submissionId,
@@ -57,7 +61,7 @@ export class ScoreRepository {
     highlights: string[],
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    await this.prisma.submission.update({
+    await this.writeClient.tx.submission.update({
       where: { id: submissionId },
       data: {
         score,
@@ -67,7 +71,7 @@ export class ScoreRepository {
       },
     });
 
-    await this.prisma.submissionLog.update({
+    await this.writeClient.tx.submissionLog.update({
       where: { traceId: logContext.traceId },
       data: {
         status: SubmissionLogStatus.COMPLETED,
@@ -78,7 +82,7 @@ export class ScoreRepository {
   }
 
   checkAlreadySubmitted(studentId: string, componentType: string) {
-    return this.prisma.submission.findFirst({
+    return this.readClient.submission.findFirst({
       select: {
         id: true,
       },
@@ -94,12 +98,12 @@ export class ScoreRepository {
     logContext: LogContext<SubmissionLogInfo>,
     externalError: string,
   ) {
-    await this.prisma.submission.update({
+    await this.writeClient.tx.submission.update({
       where: { id: submissionId },
       data: { status: SubmissionStatus.FAILED },
     });
 
-    await this.prisma.submissionLog.update({
+    await this.writeClient.tx.submissionLog.update({
       where: { traceId: logContext.traceId },
       data: {
         status: SubmissionLogStatus.FAILED,
@@ -116,7 +120,7 @@ export class ScoreRepository {
     sasUrl: string,
     fileSize: number,
   ) {
-    return this.prisma.submissionMedia.create({
+    return this.writeClient.tx.submissionMedia.create({
       data: {
         id: uuidv4(),
         submissionId,

@@ -6,12 +6,26 @@ import { APP_PROVIDERS } from './common/providers';
 import { ScoreModule } from './score/score.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { PseudoAuthModule } from './pseudo-auth/pseudo-auth.module';
-
+import { ClsModule } from 'nestjs-cls';
+import { ClsPluginTransactional } from '@nestjs-cls/transactional';
+import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { DbModule } from './system/database/db.module';
+import { PrismaService } from './system/database/prisma.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+    ClsModule.forRoot({
+      plugins: [
+        new ClsPluginTransactional({
+          imports: [DbModule],
+          adapter: new TransactionalAdapterPrisma({
+            prismaInjectionToken: PrismaService,
+          }),
+        }),
+      ],
     }),
     ScoreModule,
     LoggerModule,
