@@ -7,7 +7,6 @@ import {
 } from '@azure/storage-blob';
 import { readFile } from 'fs/promises';
 import { StrictReturn } from '../../helper/processor/strict.return';
-import { ScoreRepository } from '../respositories/score.respository';
 import { MediaType } from '@prisma/client';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
@@ -42,7 +41,7 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
     filePath: string,
     mediaType: MediaType,
     logContext: LogContext<SubmissionLogInfo>,
-  ): Promise<StrictReturn<FileUploadResponse | null>> {
+  ): Promise<StrictReturn<FileUploadResponse>> {
     const uniqueFileName = this.generateFileName(
       filePath,
       logContext.logInfo.submissionId,
@@ -90,7 +89,6 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
       return {
         success: false,
         error: errorMessage,
-        data: null,
       };
     }
 

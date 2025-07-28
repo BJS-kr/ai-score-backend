@@ -7,7 +7,10 @@ import {
 import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
 import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
 import { VideoService } from '../../IO/video/video.service';
-import { StrictReturn } from 'src/score/helper/processor/strict.return';
+import {
+  isSuccess,
+  StrictReturn,
+} from 'src/score/helper/processor/strict.return';
 import { SubmissionResult } from './interfaces/submission.result';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { MediaType } from '@prisma/client';
@@ -50,7 +53,7 @@ export class ScoreService {
     video: Express.Multer.File,
     dto: SubmissionRequestDto,
     logContext: LogContext<SubmissionLogInfo>,
-  ): Promise<StrictReturn<SubmissionResult | null>> {
+  ): Promise<StrictReturn<SubmissionResult>> {
     /**
      * check existing submission
      */
@@ -59,7 +62,7 @@ export class ScoreService {
       dto.componentType,
     );
 
-    if (this.processor.isFail(alreadySubmittedResult)) {
+    if (!isSuccess(alreadySubmittedResult)) {
       return alreadySubmittedResult;
     }
 
@@ -92,7 +95,7 @@ export class ScoreService {
       logContext,
     );
 
-    if (this.processor.isFail(processedVideoResult)) {
+    if (!isSuccess(processedVideoResult)) {
       return processedVideoResult;
     }
 
@@ -100,11 +103,11 @@ export class ScoreService {
      * Upload video to blob storage
      */
     const videoUploadResult = await this.uploadVideo(
-      processedVideoResult.data!.localVideoPath,
+      processedVideoResult.data.localVideoPath,
       logContext,
     );
 
-    if (this.processor.isFail(videoUploadResult)) {
+    if (!isSuccess(videoUploadResult)) {
       return videoUploadResult;
     }
 
@@ -112,11 +115,11 @@ export class ScoreService {
      * Upload audio to blob storage
      */
     const audioUploadResult = await this.uploadAudio(
-      processedVideoResult.data!.localAudioPath,
+      processedVideoResult.data.localAudioPath,
       logContext,
     );
 
-    if (this.processor.isFail(audioUploadResult)) {
+    if (!isSuccess(audioUploadResult)) {
       return audioUploadResult;
     }
 
@@ -128,7 +131,7 @@ export class ScoreService {
       logContext,
     );
 
-    if (this.processor.isFail(rawReviewResult)) {
+    if (!isSuccess(rawReviewResult)) {
       return rawReviewResult;
     }
 
@@ -136,11 +139,11 @@ export class ScoreService {
      * Parse review response
      */
     const parsedReviewResult = await this.parseReviewResponse(
-      rawReviewResult.data!.reviewResponse,
+      rawReviewResult.data.reviewResponse,
       logContext,
     );
 
-    if (this.processor.isFail(parsedReviewResult)) {
+    if (!isSuccess(parsedReviewResult)) {
       return parsedReviewResult;
     }
 
@@ -149,7 +152,7 @@ export class ScoreService {
      */
     const highlightedText = this.highlightText(
       dto.submitText,
-      parsedReviewResult.data!.highlights,
+      parsedReviewResult.data.highlights,
     );
 
     this.processor.accumulateContextInfo(logContext, {
@@ -159,18 +162,18 @@ export class ScoreService {
     /**
      * Complete submission
      */
-    await this.completeSubmission(parsedReviewResult.data!, logContext);
+    await this.completeSubmission(parsedReviewResult.data, logContext);
 
     return {
       success: true,
       message: 'Submission completed',
       data: {
         message: 'Submission completed',
-        videoUrl: videoUploadResult.data!.videoSasUrl!,
-        audioUrl: audioUploadResult.data!.audioSasUrl!,
-        score: parsedReviewResult.data!.score,
-        feedback: parsedReviewResult.data!.feedback,
-        highlights: parsedReviewResult.data!.highlights,
+        videoUrl: videoUploadResult.data.videoSasUrl!,
+        audioUrl: audioUploadResult.data.audioSasUrl!,
+        score: parsedReviewResult.data.score,
+        feedback: parsedReviewResult.data.feedback,
+        highlights: parsedReviewResult.data.highlights,
         highlightedText,
       },
     };
@@ -179,7 +182,7 @@ export class ScoreService {
   private async checkAlreadySubmitted(
     studentId: string,
     componentType: string,
-  ) {
+  ): Promise<StrictReturn<boolean>> {
     const alreadySubmittedRecord =
       await this.scoreRepository.checkAlreadySubmitted(
         studentId,
@@ -193,8 +196,7 @@ export class ScoreService {
 
       return {
         success: false,
-        message: 'Already submitted',
-        data: null,
+        error: 'Already submitted',
       };
     }
     return {
@@ -233,22 +235,17 @@ export class ScoreService {
       'video upload',
     );
 
-    if (this.processor.isFail(result)) {
+    if (!isSuccess(result)) {
       return result;
     }
 
-    /**
-     * type support를 받기 위해 isSuccess 체크
-     */
-    if (this.processor.isSuccess(result)) {
-      await this.scoreRepository.createMediaInfo(
-        logContext.logInfo.submissionId,
-        MediaType.VIDEO,
-        result.data.videoFileUrl!,
-        result.data.videoSasUrl!,
-        result.data.videoFileSize!,
-      );
-    }
+    await this.scoreRepository.createMediaInfo(
+      logContext.logInfo.submissionId,
+      MediaType.VIDEO,
+      result.data.videoFileUrl!,
+      result.data.videoSasUrl!,
+      result.data.videoFileSize!,
+    );
 
     return result;
   }
@@ -268,22 +265,17 @@ export class ScoreService {
       'audio upload',
     );
 
-    if (this.processor.isFail(result)) {
+    if (!isSuccess(result)) {
       return result;
     }
 
-    /**
-     * type support를 받기 위해 isSuccess 체크
-     */
-    if (this.processor.isSuccess(result)) {
-      await this.scoreRepository.createMediaInfo(
-        logContext.logInfo.submissionId,
-        MediaType.AUDIO,
-        result.data.audioFileUrl!,
-        result.data.audioSasUrl!,
-        result.data.audioFileSize!,
-      );
-    }
+    await this.scoreRepository.createMediaInfo(
+      logContext.logInfo.submissionId,
+      MediaType.AUDIO,
+      result.data.audioFileUrl!,
+      result.data.audioSasUrl!,
+      result.data.audioFileSize!,
+    );
 
     return result;
   }
@@ -330,7 +322,7 @@ export class ScoreService {
     this.logger.info(
       `
       Submission Completed\n
-      ${logContext}
+      ${JSON.stringify(logContext)}
       `,
     );
   }

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { StrictReturn } from 'src/score/helper/processor/strict.return';
+import {
+  isSuccess,
+  StrictReturn,
+} from 'src/score/helper/processor/strict.return';
 import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
 import { ScoreRepository } from 'src/score/IO/respositories/score.respository';
 
@@ -20,7 +23,7 @@ export class Processor {
   }
 
   // TODO: handleFail은 오직 submission만 핸들링 할 수 있다. 내부에서 사용하는 메서드가 failSubmission이기 때문
-  async handleFail({
+  async handleFail<T>({
     internalError,
     externalError,
     logContext,
@@ -28,7 +31,7 @@ export class Processor {
     internalError: string;
     externalError: string;
     logContext: LogContext<SubmissionLogInfo>;
-  }) {
+  }): Promise<StrictReturn<T>> {
     this.logger.trace(internalError);
 
     await this.scoreRepository.failSubmission(
@@ -40,8 +43,7 @@ export class Processor {
 
     return {
       success: false,
-      message: externalError,
-      data: null,
+      error: externalError,
     };
   }
 
@@ -50,9 +52,9 @@ export class Processor {
     logContext: LogContext<SubmissionLogInfo>,
     keys: (keyof NonNullable<T>)[],
     step: string,
-  ): Promise<StrictReturn<T | null>> {
-    if (!source.success || source.data === null) {
-      return this.handleFail({
+  ): Promise<StrictReturn<T>> {
+    if (!isSuccess(source)) {
+      return this.handleFail<T>({
         internalError: `${step} failed for submission ${logContext.logInfo.submissionId}
          error: ${source.error}
         `,
@@ -68,13 +70,5 @@ export class Processor {
     });
 
     return source;
-  }
-
-  isFail<T>(result: StrictReturn<T | null>): result is StrictReturn<null> {
-    return !result.success || !result.data;
-  }
-
-  isSuccess<T>(result: StrictReturn<T | null>): result is StrictReturn<T> {
-    return result.success && result.data !== null;
   }
 }

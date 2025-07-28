@@ -4,9 +4,7 @@ import { EssayEvaluation } from './interfaces/essay.evaluation';
 
 @Injectable()
 export class ReviewParser {
-  parseAndValidateReview(
-    content: string,
-  ): StrictReturn<EssayEvaluation | null> {
+  parseAndValidateReview(content: string): StrictReturn<EssayEvaluation> {
     try {
       const trimmedContent = this.trimJsonAnnotationIfExists(content);
       const evaluation: EssayEvaluation = JSON.parse(
@@ -17,7 +15,6 @@ export class ReviewParser {
         return {
           success: false,
           error: 'Invalid response format',
-          data: null,
         };
       }
 
@@ -41,7 +38,6 @@ export class ReviewParser {
       return {
         success: false,
         error: `Response parsing failed: ${errorMessage}`,
-        data: null,
       };
     }
   }

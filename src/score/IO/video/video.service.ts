@@ -1,12 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { isSuccess, StrictReturn } from '../../helper/processor/strict.return';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as ffprobeStatic from 'ffprobe-static';
-import { StrictReturn } from '../../helper/processor/strict.return';
-const ffmpegStatic = require('ffmpeg-static');
+
+const ffmpegStatic = require('ffmpeg-static') as string;
 
 export interface VideoProcessingRequest {
   inputFilePath: string;
@@ -42,25 +43,21 @@ export class VideoService implements OnModuleInit {
     inputFilePath,
     submissionId,
     outputDirectory,
-  }: VideoProcessingRequest): Promise<
-    StrictReturn<VideoProcessingResponse | null>
-  > {
+  }: VideoProcessingRequest): Promise<StrictReturn<VideoProcessingResponse>> {
     try {
       const validationResult = await this.validateInputFile(inputFilePath);
       if (!validationResult.success) {
         return {
           success: false,
-          error: validationResult.error,
-          data: null,
+          error: validationResult.error || 'Video validation failed',
         };
       }
 
       const videoInfoResult = await this.getVideoInfo(inputFilePath);
-      if (!videoInfoResult.success || !videoInfoResult.data) {
+      if (!isSuccess(videoInfoResult)) {
         return {
           success: false,
-          error: videoInfoResult.error,
-          data: null,
+          error: videoInfoResult.error || 'Video info extraction failed',
         };
       }
 
@@ -84,8 +81,7 @@ export class VideoService implements OnModuleInit {
       if (!videoProcessingResult.success) {
         return {
           success: false,
-          error: videoProcessingResult.error,
-          data: null,
+          error: videoProcessingResult.error || 'Video processing failed',
         };
       }
 
@@ -96,18 +92,18 @@ export class VideoService implements OnModuleInit {
       if (!audioExtractionResult.success) {
         return {
           success: false,
-          error: audioExtractionResult.error,
-          data: null,
+          error: audioExtractionResult.error || 'Audio extraction failed',
         };
       }
 
       const processedVideoInfoResult =
         await this.getVideoInfo(processedVideoPath);
-      if (!processedVideoInfoResult.success || !processedVideoInfoResult.data) {
+      if (!isSuccess(processedVideoInfoResult)) {
         return {
           success: false,
-          error: processedVideoInfoResult.error,
-          data: null,
+          error:
+            processedVideoInfoResult.error ||
+            'Processed video info extraction failed',
         };
       }
 
@@ -128,21 +124,17 @@ export class VideoService implements OnModuleInit {
       return {
         success: false,
         error: `FFmpeg video processing error: ${errorMessage}`,
-        data: null,
       };
     }
   }
 
-  async getVideoInfo(
-    filePath: string,
-  ): Promise<StrictReturn<VideoInfo | null>> {
+  async getVideoInfo(filePath: string): Promise<StrictReturn<VideoInfo>> {
     return new Promise((resolve) => {
       ffmpeg.ffprobe(filePath, (err, metadata) => {
         if (err) {
           return resolve({
             success: false,
             error: `Failed to get video info: ${err}`,
-            data: null,
           });
         }
 
@@ -153,7 +145,6 @@ export class VideoService implements OnModuleInit {
           return resolve({
             success: false,
             error: 'No video stream found in file',
-            data: null,
           });
         }
 
@@ -202,7 +193,6 @@ export class VideoService implements OnModuleInit {
           resolve({
             success: false,
             error: `Video processing failed: ${err.message}`,
-            data: false,
           });
         })
         .run();
@@ -230,7 +220,6 @@ export class VideoService implements OnModuleInit {
           resolve({
             success: false,
             error: `Audio extraction failed: ${err.message}`,
-            data: false,
           });
         })
         .run();
@@ -261,7 +250,6 @@ export class VideoService implements OnModuleInit {
         return {
           success: false,
           error: `Input file does not exist: ${filePath}`,
-          data: false,
         };
       }
 
@@ -270,7 +258,6 @@ export class VideoService implements OnModuleInit {
         return {
           success: false,
           error: `Input path is not a file: ${filePath}`,
-          data: false,
         };
       }
 
@@ -279,7 +266,6 @@ export class VideoService implements OnModuleInit {
         return {
           success: false,
           error: `Input file is not a video file: ${filePath}`,
-          data: false,
         };
       }
 
@@ -288,7 +274,6 @@ export class VideoService implements OnModuleInit {
         return {
           success: false,
           error: `File size (${Math.round(fileSize / MB)}MB) exceeds maximum allowed size (${this.MAX_FILE_SIZE_MB / MB}MB)`,
-          data: false,
         };
       }
 
@@ -302,7 +287,6 @@ export class VideoService implements OnModuleInit {
       return {
         success: false,
         error: `File validation failed: ${errorMessage}`,
-        data: false,
       };
     }
   }

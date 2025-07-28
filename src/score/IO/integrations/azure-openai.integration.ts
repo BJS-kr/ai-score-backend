@@ -28,14 +28,13 @@ export class AzureOpenAIIntegration implements OnModuleInit {
   async getRawReviewResponse(
     reviewPrompt: string,
     logContext: LogContext<SubmissionLogInfo>,
-  ): Promise<StrictReturn<RawReviewResponse | null>> {
+  ): Promise<StrictReturn<RawReviewResponse>> {
     const responseResult = await this.callAzureOpenAI(reviewPrompt, logContext);
 
     if (!responseResult.success) {
       return {
         success: false,
-        error: responseResult.error,
-        data: null,
+        error: responseResult.error || 'Failed to get raw review response',
       };
     }
 
@@ -86,7 +85,6 @@ export class AzureOpenAIIntegration implements OnModuleInit {
       return {
         success: false,
         error: ERROR_MESSAGE.AZURE_OPENAI.NO_RESPONSE,
-        data: '',
       };
     }
 
@@ -104,7 +102,6 @@ export class AzureOpenAIIntegration implements OnModuleInit {
       return {
         success: false,
         error: ERROR_MESSAGE.AZURE_OPENAI.EMPTY_RESPONSE,
-        data: '',
       };
     }
 

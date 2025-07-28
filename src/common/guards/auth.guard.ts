@@ -35,7 +35,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       jwt.verify(token, jwtSecret);
-    } catch (error) {
+    } catch {
       return false;
     }
 

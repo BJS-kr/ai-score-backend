@@ -13,7 +13,7 @@ import {
   SubmissionRequestDto,
   SubmissionRequestSchema,
 } from './dto/request/submission.request.dto';
-import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileSizeValidationPipe } from 'src/common/validators/fileSize.validator';
 import { SubmissionResponseDto } from './dto/response/submission.response.dto';
 import { Combined } from 'src/common/decorators/api';
@@ -45,8 +45,7 @@ export class ScoreController {
       return SubmissionResponseDto.build(
         {
           success: false,
-          message: 'File is required',
-          data: null,
+          error: 'File is required',
         },
         dto,
         Date.now() - logContext.startTime,

@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CommonResponseDto } from 'src/common/response/common.response.dto';
-import { StrictReturn } from 'src/score/helper/processor/strict.return';
+import {
+  isSuccess,
+  StrictReturn,
+} from 'src/score/helper/processor/strict.return';
 import { SubmissionResult } from 'src/score/core/submission/interfaces/submission.result';
 import { SubmissionRequestDto } from '../request/submission.request.dto';
 
@@ -67,7 +70,7 @@ export class SubmissionResponseDto extends CommonResponseDto {
     { studentId, studentName, submitText }: SubmissionRequestDto,
     apiLatency: number,
   ): SubmissionResponseDto {
-    if (!this.isSubmissionResult(submissionResult.data)) {
+    if (!isSuccess(submissionResult)) {
       return {
         result: 'failed',
         message: submissionResult.message ?? null,
