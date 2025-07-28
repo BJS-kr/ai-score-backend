@@ -18,6 +18,7 @@ import { RevisionReviewService } from './core/revisions/revision.review.service'
 import { RevisionRepository } from './IO/respositories/revision.repository';
 import { RevisionQueryService } from './core/revisions/revision.query.service';
 import { BullModule } from '@nestjs/bullmq';
+import { JOB_NAME } from './cron/job.constants';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { BullModule } from '@nestjs/bullmq';
     }),
     BullModule.registerQueue({
       configKey: 'ai-score-queue',
-      name: 'statistics',
+      name: JOB_NAME.CRON_REVIEW,
     }),
   ],
   controllers: [SubmissionController, RevisionController],
