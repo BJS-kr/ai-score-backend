@@ -1,4 +1,4 @@
-import { applyDecorators, HttpCode } from '@nestjs/common';
+import { applyDecorators, HttpCode, Type } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 
 export const AlwaysOk = ({
@@ -6,7 +6,7 @@ export const AlwaysOk = ({
   type,
 }: {
   description: string;
-  type: new () => any;
+  type: Type<unknown> | Function | [Function] | string;
 }): MethodDecorator =>
   applyDecorators(
     ApiResponse({

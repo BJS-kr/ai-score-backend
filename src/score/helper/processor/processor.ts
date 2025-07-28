@@ -5,7 +5,7 @@ import {
   isSuccess,
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
-import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
+import { SubmissionLogInfo } from 'src/score/core/submission/submissions.review.service';
 import { ScoreRepository } from 'src/score/IO/respositories/score.respository';
 
 @Injectable()

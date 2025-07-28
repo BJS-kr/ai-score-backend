@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ScoreController } from './router/score.controller';
-import { ScoreService } from './core/submission/review.service';
+import { ScoreService } from './core/submission/submissions.review.service';
 import { AzureBlobStorageIntegration } from './IO/integrations/azure-blob-storage.integration';
 import { VideoService } from './IO/video/video.service';
 import { AzureOpenAIIntegration } from './IO/integrations/azure-openai.integration';
@@ -11,7 +11,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { ExternalCallLogRepository } from './IO/respositories/external.call.log.repository';
-import { ReviewParser } from './core/submission/review.parser';
+import { ReviewParser } from './core/submission/submissions.review.parser';
 
 @Module({
   imports: [

@@ -1,5 +1,4 @@
 import { LogContext } from './log.context';
+import { Pagination } from './pagination';
 
-export const Custom = {
-  LogContext,
-};
+export default { LogContext, Pagination };

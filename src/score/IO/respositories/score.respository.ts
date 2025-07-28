@@ -7,7 +7,7 @@ import {
   SubmissionLogStatus,
   SubmissionStatus,
 } from '@prisma/client';
-import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
+import { SubmissionLogInfo } from 'src/score/core/submission/submissions.review.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { TxHost } from 'src/system/database/tx.host';
 

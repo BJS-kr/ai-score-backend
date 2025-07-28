@@ -1,14 +1,15 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   UploadedFile,
   UseGuards,
 } from '@nestjs/common';
 import {
-  ScoreService,
   SubmissionLogInfo,
-} from '../core/submission/review.service';
+  SubmissionsReviewService,
+} from '../core/submission/submissions.review.service';
 import {
   SubmissionRequestDto,
   SubmissionRequestSchema,
@@ -16,17 +17,18 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileSizeValidationPipe } from 'src/common/validators/fileSize.validator';
 import { SubmissionResponseDto } from './dto/response/submission.response.dto';
-import { Combined } from 'src/common/decorators/api';
+import Combined from 'src/common/decorators/api';
+import Custom from 'src/common/decorators/param';
 import { LogContext } from 'src/common/decorators/param/log.context';
-import { Custom } from 'src/common/decorators/param';
 import { AuthGuard } from 'src/common/guards/auth.guard';
+import { Pagination } from 'src/common/decorators/param/pagination';
 
 @Controller()
 @ApiTags('Essay Review')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
 export class ScoreController {
-  constructor(private readonly scoreService: ScoreService) {}
+  constructor(private readonly reviewService: SubmissionsReviewService) {}
 
   @Post('submissions')
   @Combined.FileUpload({
@@ -52,7 +54,7 @@ export class ScoreController {
       );
     }
 
-    const submissionResult = await this.scoreService.submitForReview(
+    const submissionResult = await this.reviewService.submitForReview(
       file,
       dto,
       logContext,
@@ -60,5 +62,17 @@ export class ScoreController {
     const apiLatency = Date.now() - logContext.startTime;
 
     return SubmissionResponseDto.build(submissionResult, dto, apiLatency);
+  }
+
+  @Get('submissions')
+  @Combined.AlwaysOk({
+    description: 'return all submissions by pagination',
+    // TODO: 제대로 된 타입 넣기
+    type: [SubmissionResponseDto],
+  })
+  async getSubmissions(
+    @Custom.Pagination() pagination: Pagination,
+  ): Promise<SubmissionResponseDto[]> {
+    return this.scoreService.getSubmissions(pagination);
   }
 }

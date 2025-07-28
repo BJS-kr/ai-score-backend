@@ -3,7 +3,7 @@ import { RequestLoggingInterceptor } from './interceptors/request.logging.interc
 import { HttpExceptionFilter } from './filters/http.exception.filter';
 import { Provider } from '@nestjs/common';
 
-export const APP_PROVIDERS: Provider[] = [
+export default [
   {
     provide: APP_INTERCEPTOR,
     useClass: RequestLoggingInterceptor,
@@ -12,4 +12,4 @@ export const APP_PROVIDERS: Provider[] = [
     provide: APP_FILTER,
     useClass: HttpExceptionFilter,
   },
-];
+] satisfies Provider[];

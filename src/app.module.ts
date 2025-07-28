@@ -2,7 +2,6 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerService } from './common/logger/logger.service';
 import { setupGlobalGuardrail } from './system/setup/guardrail';
-import { APP_PROVIDERS } from './common/providers';
 import { ScoreModule } from './score/score.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { PseudoAuthModule } from './pseudo-auth/pseudo-auth.module';
@@ -11,6 +10,7 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { DbModule } from './system/database/db.module';
 import { PrismaService } from './system/database/prisma.service';
+import APP_PROVIDERS from './common/providers';
 @Module({
   imports: [
     ConfigModule.forRoot({

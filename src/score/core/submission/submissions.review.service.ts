@@ -17,7 +17,7 @@ import { MediaType } from '@prisma/client';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { Processor } from 'src/score/helper/processor/processor';
 import { REVIEW_PROMPT } from './resources/review.prompt';
-import { ReviewParser } from './review.parser';
+import { ReviewParser } from './submissions.review.parser';
 import { Transactional } from '@nestjs-cls/transactional';
 
 export type SubmissionLogInfo = {
@@ -37,7 +37,7 @@ export type SubmissionLogInfo = {
 };
 
 @Injectable()
-export class ScoreService {
+export class SubmissionsReviewService {
   constructor(
     private readonly scoreRepository: ScoreRepository,
     private readonly azureBlobStorageIntegration: AzureBlobStorageIntegration,
