@@ -63,7 +63,7 @@ export class SubmissionResponseDto extends CommonResponseDto {
   }
 
   static build(
-    submissionResult: StrictReturn<SubmissionResult | null>,
+    submissionResult: StrictReturn<SubmissionResult>,
     { studentId, studentName, submitText }: SubmissionRequestDto,
     apiLatency: number,
   ): SubmissionResponseDto {

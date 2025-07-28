@@ -222,32 +222,70 @@ export class ScoreService {
     localVideoPath: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    return this.processor.process(
+    const result = await this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
-        logContext.logInfo.submissionId,
         localVideoPath,
         MediaType.VIDEO,
+        logContext,
       ),
       logContext,
       ['videoFileUrl', 'videoSasUrl'],
       'video upload',
     );
+
+    if (this.processor.isFail(result)) {
+      return result;
+    }
+
+    /**
+     * type support를 받기 위해 isSuccess 체크
+     */
+    if (this.processor.isSuccess(result)) {
+      await this.scoreRepository.createMediaInfo(
+        logContext.logInfo.submissionId,
+        MediaType.VIDEO,
+        result.data.videoFileUrl!,
+        result.data.videoSasUrl!,
+        result.data.videoFileSize!,
+      );
+    }
+
+    return result;
   }
 
   private async uploadAudio(
     localAudioPath: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
-    return this.processor.process(
+    const result = await this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
-        logContext.logInfo.submissionId,
         localAudioPath,
         MediaType.AUDIO,
+        logContext,
       ),
       logContext,
       ['audioFileUrl', 'audioSasUrl'],
       'audio upload',
     );
+
+    if (this.processor.isFail(result)) {
+      return result;
+    }
+
+    /**
+     * type support를 받기 위해 isSuccess 체크
+     */
+    if (this.processor.isSuccess(result)) {
+      await this.scoreRepository.createMediaInfo(
+        logContext.logInfo.submissionId,
+        MediaType.AUDIO,
+        result.data.audioFileUrl!,
+        result.data.audioSasUrl!,
+        result.data.audioFileSize!,
+      );
+    }
+
+    return result;
   }
 
   private async getRawReviewResponse(

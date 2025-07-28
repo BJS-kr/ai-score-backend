@@ -6,7 +6,7 @@ import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
 import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
-import { CONTEXT, ERROR_MESSAGES, TASK_NAMES } from './constant';
+import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
 import '@azure/openai/types';
 
 type RawReviewResponse = {
@@ -52,9 +52,13 @@ export class AzureOpenAIIntegration implements OnModuleInit {
     prompt: string,
     logContext: LogContext<SubmissionLogInfo>,
   ): Promise<StrictReturn<string>> {
-    this.logger.trace('Calling Azure OpenAI with prompt', 'azure-openai', {
-      prompt,
-    });
+    this.logger.trace(
+      'Calling Azure OpenAI with prompt',
+      CONTEXT.AZURE_OPENAI,
+      {
+        prompt,
+      },
+    );
 
     const start = Date.now();
     const response = await this.openAIClient.chat.completions.create({
@@ -75,13 +79,13 @@ export class AzureOpenAIIntegration implements OnModuleInit {
         latency,
         false,
         CONTEXT.AZURE_OPENAI,
-        TASK_NAMES.AZURE_OPENAI_REVIEW,
-        ERROR_MESSAGES.AZURE_OPENAI.NO_RESPONSE,
+        TASK_NAME.AZURE_OPENAI_REVIEW,
+        ERROR_MESSAGE.AZURE_OPENAI.NO_RESPONSE,
       );
 
       return {
         success: false,
-        error: ERROR_MESSAGES.AZURE_OPENAI.NO_RESPONSE,
+        error: ERROR_MESSAGE.AZURE_OPENAI.NO_RESPONSE,
         data: '',
       };
     }
@@ -93,13 +97,13 @@ export class AzureOpenAIIntegration implements OnModuleInit {
         latency,
         false,
         CONTEXT.AZURE_OPENAI,
-        TASK_NAMES.AZURE_OPENAI_REVIEW,
-        ERROR_MESSAGES.AZURE_OPENAI.EMPTY_RESPONSE,
+        TASK_NAME.AZURE_OPENAI_REVIEW,
+        ERROR_MESSAGE.AZURE_OPENAI.EMPTY_RESPONSE,
       );
 
       return {
         success: false,
-        error: ERROR_MESSAGES.AZURE_OPENAI.EMPTY_RESPONSE,
+        error: ERROR_MESSAGE.AZURE_OPENAI.EMPTY_RESPONSE,
         data: '',
       };
     }
@@ -109,7 +113,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
       latency,
       true,
       CONTEXT.AZURE_OPENAI,
-      TASK_NAMES.AZURE_OPENAI_REVIEW,
+      TASK_NAME.AZURE_OPENAI_REVIEW,
       'Successfully got response from Azure OpenAI',
     );
 

@@ -73,4 +73,8 @@ export class Processor {
   isFail<T>(result: StrictReturn<T | null>): result is StrictReturn<null> {
     return !result.success || !result.data;
   }
+
+  isSuccess<T>(result: StrictReturn<T | null>): result is StrictReturn<T> {
+    return result.success && result.data !== null;
+  }
 }
