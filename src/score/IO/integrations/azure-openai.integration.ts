@@ -1,14 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AzureOpenAI } from 'openai';
-import '@azure/openai/types';
 import { StrictReturn } from '../../helper/processor/strict.return';
-import { EssayEvaluation } from '../respositories/score.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { SubmissionLogInfo } from 'src/score/core/submission/review.service';
 import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
 import { CONTEXT, ERROR_MESSAGES, TASK_NAMES } from './constant';
+import '@azure/openai/types';
 
 type RawReviewResponse = {
   reviewPrompt: string;
@@ -16,33 +15,15 @@ type RawReviewResponse = {
 };
 
 @Injectable()
-export class AzureOpenAIIntegration {
-  private readonly openAIClient: AzureOpenAI;
-  private readonly deploymentName: string;
+export class AzureOpenAIIntegration implements OnModuleInit {
+  private openAIClient: AzureOpenAI;
+  private deploymentName: string;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
     private readonly externalCallLogRepository: ExternalCallLogRepository,
-  ) {
-    const endpoint = this.configService.get<string>('AZURE_ENDPOINT_URL');
-    const apiKey = this.configService.get<string>('AZURE_ENDPOINT_KEY');
-    const apiVersion =
-      this.configService.get<string>('OPENAI_API_VERSION') || '';
-    this.deploymentName =
-      this.configService.get<string>('AZURE_OPENAI_DEPLOYMENT_NAME') || '';
-
-    if (!apiKey || !this.deploymentName || !endpoint || !apiVersion) {
-      throw new Error('Azure OpenAI configuration is missing');
-    }
-
-    this.openAIClient = new AzureOpenAI({
-      endpoint,
-      apiKey,
-      deployment: this.deploymentName,
-      apiVersion,
-    });
-  }
+  ) {}
 
   async getRawReviewResponse(
     reviewPrompt: string,
@@ -154,6 +135,26 @@ export class AzureOpenAIIntegration {
       latency,
       taskName,
       description,
+    });
+  }
+
+  onModuleInit() {
+    const endpoint = this.configService.get<string>('AZURE_ENDPOINT_URL');
+    const apiKey = this.configService.get<string>('AZURE_ENDPOINT_KEY');
+    const apiVersion =
+      this.configService.get<string>('OPENAI_API_VERSION') || '';
+    this.deploymentName =
+      this.configService.get<string>('AZURE_OPENAI_DEPLOYMENT_NAME') || '';
+
+    if (!apiKey || !this.deploymentName || !endpoint || !apiVersion) {
+      throw new Error('Azure OpenAI configuration is missing');
+    }
+
+    this.openAIClient = new AzureOpenAI({
+      endpoint,
+      apiKey,
+      deployment: this.deploymentName,
+      apiVersion,
     });
   }
 }

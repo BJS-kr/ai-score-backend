@@ -1,15 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BlobServiceClient, BlobSASPermissions } from '@azure/storage-blob';
 import { readFile } from 'fs/promises';
 import { StrictReturn } from '../../helper/processor/strict.return';
 import { ScoreRepository } from '../respositories/score.respository';
 import { MediaType } from '@prisma/client';
-
-export interface GenerateSasUrlRequest {
-  fileName: string;
-  expiresInHours: number;
-}
 
 export interface FileUploadResponse {
   videoFileUrl?: string;
@@ -19,38 +14,17 @@ export interface FileUploadResponse {
 }
 
 @Injectable()
-export class AzureBlobStorageIntegration {
-  private readonly blobServiceClient: BlobServiceClient;
-  private readonly containerName: string;
-  private readonly accountName: string;
-  private readonly accountKey: string;
-  private readonly azureConnectionString: string;
+export class AzureBlobStorageIntegration implements OnModuleInit {
+  private blobServiceClient: BlobServiceClient;
+  private containerName: string;
+  private accountName: string;
+  private accountKey: string;
+  private azureConnectionString: string;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly scoreRepository: ScoreRepository,
-  ) {
-    this.accountKey = this.configService.get<string>('AZURE_ACCOUNT_KEY') || '';
-    this.accountName =
-      this.configService.get<string>('AZURE_ACCOUNT_NAME') || '';
-    this.containerName =
-      this.configService.get<string>('AZURE_CONTAINER') || '';
-    this.azureConnectionString =
-      this.configService.get<string>('AZURE_CONNECTION_STRING') || '';
-
-    if (
-      !this.accountName ||
-      !this.accountKey ||
-      !this.containerName ||
-      !this.azureConnectionString
-    ) {
-      throw new Error('Azure Blob Storage configuration is missing');
-    }
-
-    this.blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.azureConnectionString,
-    );
-  }
+  ) {}
 
   async uploadFile(
     submissionId: string,
@@ -122,5 +96,28 @@ export class AzureBlobStorageIntegration {
   private getFileExtension(fileName: string): string {
     const lastDotIndex = fileName.lastIndexOf('.');
     return lastDotIndex !== -1 ? fileName.substring(lastDotIndex) : '';
+  }
+
+  onModuleInit() {
+    this.accountKey = this.configService.get<string>('AZURE_ACCOUNT_KEY') || '';
+    this.accountName =
+      this.configService.get<string>('AZURE_ACCOUNT_NAME') || '';
+    this.containerName =
+      this.configService.get<string>('AZURE_CONTAINER') || '';
+    this.azureConnectionString =
+      this.configService.get<string>('AZURE_CONNECTION_STRING') || '';
+
+    if (
+      !this.accountName ||
+      !this.accountKey ||
+      !this.containerName ||
+      !this.azureConnectionString
+    ) {
+      throw new Error('Azure Blob Storage configuration is missing');
+    }
+
+    this.blobServiceClient = BlobServiceClient.fromConnectionString(
+      this.azureConnectionString,
+    );
   }
 }

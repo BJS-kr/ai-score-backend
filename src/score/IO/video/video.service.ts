@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'node:fs/promises';
@@ -32,22 +32,11 @@ export interface VideoInfo {
 const MB = 1024 * 1024;
 
 @Injectable()
-export class VideoService {
-  private readonly tempDirectory: string;
-  private readonly MAX_FILE_SIZE_MB: number;
+export class VideoService implements OnModuleInit {
+  private tempDirectory: string;
+  private MAX_FILE_SIZE_MB: number;
 
-  constructor(private readonly configService: ConfigService) {
-    this.tempDirectory =
-      this.configService.get<string>('video.tempDirectory') || './temp';
-    // TODO: move to env
-    this.MAX_FILE_SIZE_MB =
-      (this.configService.get<number>('video.maxFileSizeMB') || 500) * MB;
-
-    ffmpeg.setFfmpegPath(ffmpegStatic);
-    ffmpeg.setFfprobePath(ffprobeStatic.path);
-
-    this.ensureTempDirectoryExists();
-  }
+  constructor(private readonly configService: ConfigService) {}
 
   async processVideo({
     inputFilePath,
@@ -322,5 +311,18 @@ export class VideoService {
     if (!fsSync.existsSync(this.tempDirectory)) {
       fsSync.mkdirSync(this.tempDirectory, { recursive: true });
     }
+  }
+
+  onModuleInit() {
+    this.tempDirectory =
+      this.configService.get<string>('video.tempDirectory') || './temp';
+    // TODO: move to env
+    this.MAX_FILE_SIZE_MB =
+      (this.configService.get<number>('video.maxFileSizeMB') || 500) * MB;
+
+    ffmpeg.setFfmpegPath(ffmpegStatic);
+    ffmpeg.setFfprobePath(ffprobeStatic.path);
+
+    this.ensureTempDirectoryExists();
   }
 }
