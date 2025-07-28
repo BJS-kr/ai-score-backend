@@ -328,15 +328,9 @@ export class ScoreService {
     );
 
     this.logger.info(
-      `Submission ${logContext.logInfo.submissionId} completed\n
-       videoUrl: ${logContext.logInfo.videoFileUrl}\n
-       audioUrl: ${logContext.logInfo.audioFileUrl}\n
-       videoSasUrl: ${logContext.logInfo.videoSasUrl}\n
-       audioSasUrl: ${logContext.logInfo.audioSasUrl}\n
-       score: ${logContext.logInfo.score}\n
-       feedback: ${logContext.logInfo.feedback}\n
-       highlights: ${logContext.logInfo.highlights || []}\n
-       highlightedText: ${logContext.logInfo.highlightedText}\n
+      `
+      Submission Completed\n
+      ${logContext}
       `,
     );
   }
