@@ -17,6 +17,7 @@ import { RevisionController } from './router/revisions/revision.controller';
 import { RevisionReviewService } from './core/revisions/revision.review.service';
 import { RevisionRepository } from './IO/respositories/revision.repository';
 import { RevisionQueryService } from './core/revisions/revision.query.service';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -30,6 +31,10 @@ import { RevisionQueryService } from './core/revisions/revision.query.service';
           callback(null, `${uuidv4()}-${file.originalname}`);
         },
       }),
+    }),
+    BullModule.registerQueue({
+      configKey: 'ai-score-queue',
+      name: 'statistics',
     }),
   ],
   controllers: [SubmissionController, RevisionController],

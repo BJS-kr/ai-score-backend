@@ -10,6 +10,8 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { DbModule } from './system/database/db.module';
 import { PrismaService } from './system/database/prisma.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BullModule } from '@nestjs/bullmq';
 import APP_PROVIDERS from './common/providers';
 @Module({
   imports: [
@@ -27,6 +29,14 @@ import APP_PROVIDERS from './common/providers';
         }),
       ],
     }),
+    BullModule.forRoot('ai-score-queue', {
+      connection: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD,
+      },
+    }),
+    ScheduleModule.forRoot(),
     ScoreModule,
     LoggerModule,
     PseudoAuthModule,
