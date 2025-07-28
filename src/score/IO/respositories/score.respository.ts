@@ -95,7 +95,8 @@ export class ScoreRepository {
 
   async failSubmission(
     submissionId: string,
-    logContext: LogContext<SubmissionLogInfo>,
+    traceId: string,
+    startTime: number,
     externalError: string,
   ) {
     await this.writeClient.tx.submission.update({
@@ -104,11 +105,11 @@ export class ScoreRepository {
     });
 
     await this.writeClient.tx.submissionLog.update({
-      where: { traceId: logContext.traceId },
+      where: { traceId },
       data: {
         status: SubmissionLogStatus.FAILED,
         errorMessage: externalError,
-        latency: Date.now() - logContext.startTime,
+        latency: Date.now() - startTime,
       },
     });
   }

@@ -18,6 +18,7 @@ import { ReviewParser } from './review.parser';
 import { Transactional } from '@nestjs-cls/transactional';
 
 export type SubmissionLogInfo = {
+  submissionId: string;
   localVideoPath?: string;
   localAudioPath?: string;
   videoFileUrl?: string;
@@ -79,12 +80,15 @@ export class ScoreService {
       logContext,
     );
 
+    this.processor.accumulateContextInfo(logContext, {
+      submissionId,
+    });
+
     /**
      * process video using ffmpeg
      */
     const processedVideoResult = await this.processVideo(
       video.path,
-      submissionId,
       logContext,
     );
 
@@ -96,7 +100,6 @@ export class ScoreService {
      * Upload video to blob storage
      */
     const videoUploadResult = await this.uploadVideo(
-      submissionId,
       processedVideoResult.data!.localVideoPath,
       logContext,
     );
@@ -109,7 +112,6 @@ export class ScoreService {
      * Upload audio to blob storage
      */
     const audioUploadResult = await this.uploadAudio(
-      submissionId,
       processedVideoResult.data!.localAudioPath,
       logContext,
     );
@@ -122,7 +124,6 @@ export class ScoreService {
      * Get review prompt
      */
     const rawReviewResult = await this.getRawReviewResponse(
-      submissionId,
       dto.submitText,
       logContext,
     );
@@ -135,9 +136,8 @@ export class ScoreService {
      * Parse review response
      */
     const parsedReviewResult = await this.parseReviewResponse(
-      submissionId,
-      logContext,
       rawReviewResult.data!.reviewResponse,
+      logContext,
     );
 
     if (this.processor.isFail(parsedReviewResult)) {
@@ -159,11 +159,7 @@ export class ScoreService {
     /**
      * Complete submission
      */
-    await this.completeSubmission(
-      submissionId,
-      parsedReviewResult.data!,
-      logContext,
-    );
+    await this.completeSubmission(parsedReviewResult.data!, logContext);
 
     return {
       success: true,
@@ -209,15 +205,13 @@ export class ScoreService {
 
   private async processVideo(
     videoPath: string,
-    submissionId: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
     return this.processor.process(
       await this.videoService.processVideo({
         inputFilePath: videoPath,
-        submissionId,
+        submissionId: logContext.logInfo.submissionId,
       }),
-      submissionId,
       logContext,
       ['localVideoPath', 'localAudioPath'],
       'video processing',
@@ -225,17 +219,15 @@ export class ScoreService {
   }
 
   private async uploadVideo(
-    submissionId: string,
     localVideoPath: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
     return this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
-        submissionId,
+        logContext.logInfo.submissionId,
         localVideoPath,
         MediaType.VIDEO,
       ),
-      submissionId,
       logContext,
       ['videoFileUrl', 'videoSasUrl'],
       'video upload',
@@ -243,17 +235,15 @@ export class ScoreService {
   }
 
   private async uploadAudio(
-    submissionId: string,
     localAudioPath: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
     return this.processor.process(
       await this.azureBlobStorageIntegration.uploadFile(
-        submissionId,
+        logContext.logInfo.submissionId,
         localAudioPath,
         MediaType.AUDIO,
       ),
-      submissionId,
       logContext,
       ['audioFileUrl', 'audioSasUrl'],
       'audio upload',
@@ -261,7 +251,6 @@ export class ScoreService {
   }
 
   private async getRawReviewResponse(
-    submissionId: string,
     submitText: string,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
@@ -270,7 +259,6 @@ export class ScoreService {
         this.buildEvaluationPrompt(submitText),
         logContext,
       ),
-      submissionId,
       logContext,
       ['reviewPrompt', 'reviewResponse'],
       'review prompt',
@@ -278,13 +266,11 @@ export class ScoreService {
   }
 
   private async parseReviewResponse(
-    submissionId: string,
-    logContext: LogContext<SubmissionLogInfo>,
     rawReviewResponse: string,
+    logContext: LogContext<SubmissionLogInfo>,
   ) {
     return this.processor.process(
       this.reviewParser.parseAndValidateReview(rawReviewResponse),
-      submissionId,
       logContext,
       ['score', 'feedback', 'highlights'],
       'review response',
@@ -292,12 +278,11 @@ export class ScoreService {
   }
 
   private async completeSubmission(
-    submissionId: string,
     evaluation: EssayEvaluation,
     logContext: LogContext<SubmissionLogInfo>,
   ) {
     await this.scoreRepository.completeSubmission(
-      submissionId,
+      logContext.logInfo.submissionId,
       evaluation.score,
       evaluation.feedback,
       evaluation.highlights,
@@ -305,7 +290,7 @@ export class ScoreService {
     );
 
     this.logger.info(
-      `Submission ${submissionId} completed\n
+      `Submission ${logContext.logInfo.submissionId} completed\n
        videoUrl: ${logContext.logInfo.videoFileUrl}\n
        audioUrl: ${logContext.logInfo.audioFileUrl}\n
        videoSasUrl: ${logContext.logInfo.videoSasUrl}\n

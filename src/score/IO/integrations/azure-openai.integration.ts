@@ -130,6 +130,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
     this.logger.trace(description, context);
     return this.externalCallLogRepository.createLog({
       traceId: logContext.traceId,
+      submissionId: logContext.logInfo.submissionId,
       context,
       success,
       latency,

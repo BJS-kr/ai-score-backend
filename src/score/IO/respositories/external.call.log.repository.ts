@@ -12,6 +12,7 @@ export class ExternalCallLogRepository {
     success,
     latency,
     taskName,
+    submissionId,
     description,
     requestData,
     responseData,
@@ -22,14 +23,16 @@ export class ExternalCallLogRepository {
     success: boolean;
     latency: number;
     taskName: string;
+    submissionId: string;
     description?: string;
     requestData?: Prisma.NullableJsonNullValueInput;
     responseData?: Prisma.NullableJsonNullValueInput;
     errorMessage?: string;
   }) {
-    return this.writeClient.tx.externalCallLog.create({
+    return this.writeClient.tx.submissionExternalCallLog.create({
       data: {
         traceId,
+        submissionId,
         context,
         success,
         latency,

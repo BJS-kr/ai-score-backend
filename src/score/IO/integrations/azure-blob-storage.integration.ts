@@ -31,17 +31,16 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
     filePath: string,
     mediaType: MediaType,
   ): Promise<StrictReturn<FileUploadResponse | null>> {
-    const fileExtension = this.getFileExtension(filePath);
-    const uniqueFileName = `${submissionId}/${mediaType}${fileExtension}`;
-    const containerClient = this.blobServiceClient.getContainerClient(
-      this.containerName,
+    const uniqueFileName = this.generateFileName(
+      filePath,
+      submissionId,
+      mediaType,
     );
-    await containerClient.createIfNotExists();
-
-    const fileBuffer = await readFile(filePath);
-    const fileSize = fileBuffer.length;
-
+    const containerClient = await this.getContainerClient();
+    const { fileBuffer, fileSize } = await this.getFileBufferAndSize(filePath);
     const blockBlobClient = containerClient.getBlockBlobClient(uniqueFileName);
+
+    //4
     const uploadResponse = await blockBlobClient.uploadData(fileBuffer, {
       blobHTTPHeaders: {
         blobContentType:
@@ -54,7 +53,7 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
       },
     });
 
-    if (!uploadResponse.requestId) {
+    if (uploadResponse.errorCode) {
       return {
         success: false,
         error: 'File upload failed - no request ID received',
@@ -93,9 +92,33 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
     };
   }
 
+  private generateFileName(
+    filePath: string,
+    submissionId: string,
+    mediaType: MediaType,
+  ) {
+    const fileExtension = this.getFileExtension(filePath);
+    return `${submissionId}/${mediaType}${fileExtension}`;
+  }
+
   private getFileExtension(fileName: string): string {
     const lastDotIndex = fileName.lastIndexOf('.');
     return lastDotIndex !== -1 ? fileName.substring(lastDotIndex) : '';
+  }
+
+  private async getContainerClient() {
+    const containerClient = this.blobServiceClient.getContainerClient(
+      this.containerName,
+    );
+    await containerClient.createIfNotExists();
+
+    return containerClient;
+  }
+
+  private async getFileBufferAndSize(filePath: string) {
+    const fileBuffer = await readFile(filePath);
+    const fileSize = fileBuffer.length;
+    return { fileBuffer, fileSize };
   }
 
   onModuleInit() {

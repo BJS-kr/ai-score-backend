@@ -19,22 +19,22 @@ export class Processor {
     logContext.logInfo = { ...logContext.logInfo, ...newInfo };
   }
 
-  async handleFail<T extends Record<string, unknown>>({
+  // TODO: handleFail은 오직 submission만 핸들링 할 수 있다. 내부에서 사용하는 메서드가 failSubmission이기 때문
+  async handleFail({
     internalError,
     externalError,
-    submissionId,
     logContext,
   }: {
     internalError: string;
     externalError: string;
-    submissionId: string;
-    logContext: LogContext<T>;
+    logContext: LogContext<SubmissionLogInfo>;
   }) {
     this.logger.trace(internalError);
 
     await this.scoreRepository.failSubmission(
-      submissionId,
-      logContext,
+      logContext.logInfo.submissionId,
+      logContext.traceId,
+      logContext.startTime,
       externalError,
     );
 
@@ -47,18 +47,16 @@ export class Processor {
 
   async process<T>(
     source: StrictReturn<T>,
-    submissionId: string,
     logContext: LogContext<SubmissionLogInfo>,
     keys: (keyof NonNullable<T>)[],
     step: string,
   ): Promise<StrictReturn<T | null>> {
     if (!source.success || source.data === null) {
       return this.handleFail({
-        internalError: `${step} failed for submission ${submissionId}
+        internalError: `${step} failed for submission ${logContext.logInfo.submissionId}
          error: ${source.error}
         `,
         externalError: `${step} failed`,
-        submissionId,
         logContext,
       });
     }
