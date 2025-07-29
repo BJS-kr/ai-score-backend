@@ -6,6 +6,7 @@ import { JOB_NAME } from '../../job.constants';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { trace } from '@opentelemetry/api';
+import { traced } from 'src/system/telemetry/run.in.trace';
 
 @Injectable()
 export class CronReviewProducer {
@@ -18,27 +19,24 @@ export class CronReviewProducer {
   @Cron(CronExpression.EVERY_10_SECONDS)
   // @Cron(CronExpression.EVERY_HOUR)
   async handleRetryFailedReviews() {
-    trace
-      .getTracer('CronReviewProducer')
-      .startActiveSpan('handleRetryFailedReviews', async (span) => {
-        this.logger.info(`Cron: retrying one-time failed submissions...`);
+    traced('CronReviewProducer', 'handleRetryFailedReviews', async () => {
+      this.logger.info(`Cron: retrying one-time failed submissions...`);
 
-        const submissions =
-          await this.submissionRepository.getFailedAndNotRetriedSubmissions();
+      const submissions =
+        await this.submissionRepository.getFailedAndNotRetriedSubmissions();
 
-        await this.cronReviewQueue.addBulk(
-          submissions.map((submission) => ({
-            name: JOB_NAME.CRON_REVIEW,
-            data: { submissionId: submission.id },
-          })),
+      await this.cronReviewQueue.addBulk(
+        submissions.map((submission) => ({
+          name: JOB_NAME.CRON_REVIEW,
+          data: { submissionId: submission.id },
+        })),
+      );
+
+      submissions.length &&
+        this.logger.info(
+          `Cron: successfully added ${submissions.length} submissions to the queue`,
+          'CronReviewProducer',
         );
-
-        submissions.length &&
-          this.logger.info(
-            `Cron: successfully added ${submissions.length} submissions to the queue`,
-            'CronReviewProducer',
-          );
-        span.end();
-      });
+    });
   }
 }

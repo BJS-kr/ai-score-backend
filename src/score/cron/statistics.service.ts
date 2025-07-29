@@ -4,6 +4,7 @@ import { EVERY_MONTH } from './cron.expressions';
 import { StatisticsRepository } from '../IO/respositories/statistics.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { trace } from '@opentelemetry/api';
+import { traced } from 'src/system/telemetry/run.in.trace';
 
 export type Stats = {
   total: number;
@@ -18,57 +19,44 @@ export class StatisticsService {
   ) {}
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleDailyStatistics() {
-    trace
-      .getTracer('StatisticsService')
-      .startActiveSpan('handleDailyStatistics', async (span) => {
-        const yesterday = this.getDaysAgo(1);
-        const dailyStats =
-          await this.statisticsRepository.getStatsByFromDate(yesterday);
-        const stat =
-          await this.statisticsRepository.createDailyStats(dailyStats);
-        this.logger.info(
-          `Daily statistics: ${JSON.stringify(stat)}`,
-          'StatisticsService',
-        );
-
-        span.end();
-      });
+    traced('StatisticsService', 'handleDailyStatistics', async () => {
+      const yesterday = this.getDaysAgo(1);
+      const dailyStats =
+        await this.statisticsRepository.getStatsByFromDate(yesterday);
+      const stat = await this.statisticsRepository.createDailyStats(dailyStats);
+      this.logger.info(
+        `Daily statistics: ${JSON.stringify(stat)}`,
+        'StatisticsService',
+      );
+    });
   }
 
   @Cron(CronExpression.EVERY_WEEK)
   async handleWeeklyStatistics() {
-    trace
-      .getTracer('StatisticsService')
-      .startActiveSpan('handleWeeklyStatistics', async (span) => {
-        const sevenDaysAgo = this.getDaysAgo(7);
-        const stats =
-          await this.statisticsRepository.getStatsByFromDate(sevenDaysAgo);
-        const stat = await this.statisticsRepository.createWeeklyStats(stats);
-        this.logger.info(
-          `Weekly statistics: ${JSON.stringify(stat)}`,
-          'StatisticsService',
-        );
-
-        span.end();
-      });
+    traced('StatisticsService', 'handleWeeklyStatistics', async () => {
+      const sevenDaysAgo = this.getDaysAgo(7);
+      const stats =
+        await this.statisticsRepository.getStatsByFromDate(sevenDaysAgo);
+      const stat = await this.statisticsRepository.createWeeklyStats(stats);
+      this.logger.info(
+        `Weekly statistics: ${JSON.stringify(stat)}`,
+        'StatisticsService',
+      );
+    });
   }
 
   @Cron(EVERY_MONTH)
   async handleMonthlyStatistics() {
-    trace
-      .getTracer('StatisticsService')
-      .startActiveSpan('handleMonthlyStatistics', async (span) => {
-        const lastMonthFirstDay = this.getLastMonthFirstDay();
-        const stats =
-          await this.statisticsRepository.getStatsByFromDate(lastMonthFirstDay);
-        const stat = await this.statisticsRepository.createMonthlyStats(stats);
-        this.logger.info(
-          `Monthly statistics: ${JSON.stringify(stat)}`,
-          'StatisticsService',
-        );
-
-        span.end();
-      });
+    traced('StatisticsService', 'handleMonthlyStatistics', async () => {
+      const lastMonthFirstDay = this.getLastMonthFirstDay();
+      const stats =
+        await this.statisticsRepository.getStatsByFromDate(lastMonthFirstDay);
+      const stat = await this.statisticsRepository.createMonthlyStats(stats);
+      this.logger.info(
+        `Monthly statistics: ${JSON.stringify(stat)}`,
+        'StatisticsService',
+      );
+    });
   }
 
   private getLastMonthFirstDay() {
