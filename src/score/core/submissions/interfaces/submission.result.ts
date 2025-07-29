@@ -6,4 +6,7 @@ export interface SubmissionResult {
   feedback: string;
   highlights: string[];
   highlightedText: string;
+  studentId: string;
+  studentName: string;
+  submitText: string;
 }

@@ -15,6 +15,7 @@ import {
   NewSubmissionLogInfo,
 } from 'src/common/decorators/param/log.context';
 import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
+import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
 
 export interface FileUploadResponse {
   videoFileUrl?: string;
@@ -36,8 +37,31 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
-    private readonly externalCallLogRepository: ExternalCallLogRepository,
+    private readonly externalLogger: ExternalLogger,
   ) {}
+
+  onModuleInit() {
+    this.accountKey = this.configService.get<string>('AZURE_ACCOUNT_KEY') || '';
+    this.accountName =
+      this.configService.get<string>('AZURE_ACCOUNT_NAME') || '';
+    this.containerName =
+      this.configService.get<string>('AZURE_CONTAINER') || '';
+    this.azureConnectionString =
+      this.configService.get<string>('AZURE_CONNECTION_STRING') || '';
+
+    if (
+      !this.accountName ||
+      !this.accountKey ||
+      !this.containerName ||
+      !this.azureConnectionString
+    ) {
+      throw new Error('Azure Blob Storage configuration is missing');
+    }
+
+    this.blobServiceClient = BlobServiceClient.fromConnectionString(
+      this.azureConnectionString,
+    );
+  }
 
   async uploadFile(
     filePath: string,
@@ -79,7 +103,7 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
           uploadResponse.errorCode,
         );
 
-      await this.logExternalCall(
+      await this.externalLogger.logExternalCall(
         logContext,
         latency,
         false,
@@ -96,7 +120,7 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
 
     const { sasUrl, fileUrl } = await this.getUrls(blockBlobClient);
 
-    await this.logExternalCall(
+    await this.externalLogger.logExternalCall(
       logContext,
       latency,
       true,
@@ -181,48 +205,5 @@ export class AzureBlobStorageIntegration implements OnModuleInit {
     const fileUrl = blockBlobClient.url;
 
     return { sasUrl, fileUrl };
-  }
-
-  private logExternalCall(
-    logContext: LogContext<NewSubmissionLogInfo>,
-    latency: number,
-    success: boolean,
-    context: string,
-    taskName: string,
-    description: string,
-  ) {
-    this.logger.trace(description, context);
-    return this.externalCallLogRepository.createLog({
-      traceId: logContext.traceId,
-      submissionId: logContext.logInfo.submissionId,
-      context,
-      success,
-      latency,
-      taskName,
-      description,
-    });
-  }
-
-  onModuleInit() {
-    this.accountKey = this.configService.get<string>('AZURE_ACCOUNT_KEY') || '';
-    this.accountName =
-      this.configService.get<string>('AZURE_ACCOUNT_NAME') || '';
-    this.containerName =
-      this.configService.get<string>('AZURE_CONTAINER') || '';
-    this.azureConnectionString =
-      this.configService.get<string>('AZURE_CONNECTION_STRING') || '';
-
-    if (
-      !this.accountName ||
-      !this.accountKey ||
-      !this.containerName ||
-      !this.azureConnectionString
-    ) {
-      throw new Error('Azure Blob Storage configuration is missing');
-    }
-
-    this.blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.azureConnectionString,
-    );
   }
 }

@@ -10,7 +10,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RevisionReviewService } from 'src/score/core/revisions/revision.review.service';
-import { SubmissionResponseDto } from '../submissions/dto/response/submission.response.dto';
+import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
 import { RevisionRequestDto } from './dto/request/revision.request.dto';
 import Combined from 'src/common/decorators/api';
 import Custom from 'src/common/decorators/param';
@@ -18,6 +18,7 @@ import { LogContext } from 'src/common/decorators/param/log.context';
 import { Pagination } from 'src/common/decorators/param/pagination';
 import { RevisionQueryService } from 'src/score/core/revisions/revision.query.service';
 import { RevisionResponseDto } from './dto/response/revision.response.dto';
+import { RevisionsResponseDto } from './dto/response/revisions.response.dto';
 
 @Controller('revision')
 @ApiTags('Revision')
@@ -32,20 +33,23 @@ export class RevisionController {
   @Post()
   @Combined.AlwaysOk({
     description: 'Revision result',
-    type: SubmissionResponseDto,
+    type: ReviewResponseDto,
   })
   async createRevision(
     @Body() { submissionId }: RevisionRequestDto,
     @Custom.LogContext() logContext: LogContext,
   ) {
     logContext.logInfo.submissionId = submissionId;
-    return this.revisionReviewService.reviseSubmission(logContext);
+    const result =
+      await this.revisionReviewService.reviseSubmission(logContext);
+    const apiLatency = Date.now() - logContext.startTime;
+    return ReviewResponseDto.build(result, apiLatency);
   }
 
   @Get()
   @Combined.AlwaysOk({
     description: 'Return all revisions by pagination',
-    type: [RevisionResponseDto],
+    type: RevisionsResponseDto,
   })
   async getRevisions(
     @Custom.Pagination({

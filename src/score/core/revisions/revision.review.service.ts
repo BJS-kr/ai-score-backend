@@ -11,6 +11,7 @@ import { MediaType, RevisionStatus } from '@prisma/client';
 import { Processor } from 'src/score/helper/processor/processor';
 import { RevisionRepository } from 'src/score/IO/respositories/revision.repository';
 import { Transactional } from '@nestjs-cls/transactional';
+import { LoggerService } from 'src/common/logger/logger.service';
 
 // TODO: 로그 추가
 @Injectable()
@@ -20,6 +21,7 @@ export class RevisionReviewService {
     private readonly submissionRepository: SubmissionRepository,
     private readonly revisionRepository: RevisionRepository,
     private readonly processor: Processor,
+    private readonly logger: LoggerService,
   ) {}
 
   @Transactional()
@@ -37,9 +39,9 @@ export class RevisionReviewService {
       };
     }
 
-    const revision = await this.revisionRepository.createRevision(
-      submission.id,
-    );
+    const revision = await this.revisionRepository.createRevision(logContext);
+
+    await this.submissionRepository.updateSubmissionRetried(submission.id);
 
     const submissionMediasResult = await this.getSubmissionMedias(
       submission.id,
@@ -55,12 +57,15 @@ export class RevisionReviewService {
       videoSasUrl,
       audioSasUrl,
     });
+    const { studentId, studentName } = submission;
 
     const reviewResult = await this.submissionReviewService.submitForReview(
       submission.submitText,
       logContext,
       videoSasUrl,
       audioSasUrl,
+      studentId,
+      studentName,
     );
 
     if (!isSuccess(reviewResult)) {

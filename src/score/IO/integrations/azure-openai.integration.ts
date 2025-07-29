@@ -6,6 +6,7 @@ import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
+import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
 import '@azure/openai/types';
 
 type RawReviewResponse = {
@@ -21,8 +22,28 @@ export class AzureOpenAIIntegration implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
-    private readonly externalCallLogRepository: ExternalCallLogRepository,
+    private readonly externalLogger: ExternalLogger,
   ) {}
+
+  onModuleInit() {
+    const endpoint = this.configService.get<string>('AZURE_ENDPOINT_URL');
+    const apiKey = this.configService.get<string>('AZURE_ENDPOINT_KEY');
+    const apiVersion =
+      this.configService.get<string>('OPENAI_API_VERSION') || '';
+    this.deploymentName =
+      this.configService.get<string>('AZURE_OPENAI_DEPLOYMENT_NAME') || '';
+
+    if (!apiKey || !this.deploymentName || !endpoint || !apiVersion) {
+      throw new Error('Azure OpenAI configuration is missing');
+    }
+
+    this.openAIClient = new AzureOpenAI({
+      endpoint,
+      apiKey,
+      deployment: this.deploymentName,
+      apiVersion,
+    });
+  }
 
   async getRawReviewResponse(
     reviewPrompt: string,
@@ -72,7 +93,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
     const latency = Date.now() - start;
 
     if (!response.choices || response.choices.length === 0) {
-      await this.logExternalCall(
+      await this.externalLogger.logExternalCall(
         logContext,
         latency,
         false,
@@ -89,7 +110,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
 
     const content = response.choices[0].message?.content;
     if (!content) {
-      await this.logExternalCall(
+      await this.externalLogger.logExternalCall(
         logContext,
         latency,
         false,
@@ -104,7 +125,7 @@ export class AzureOpenAIIntegration implements OnModuleInit {
       };
     }
 
-    await this.logExternalCall(
+    await this.externalLogger.logExternalCall(
       logContext,
       latency,
       true,
@@ -117,45 +138,5 @@ export class AzureOpenAIIntegration implements OnModuleInit {
       success: true,
       data: content,
     };
-  }
-
-  private logExternalCall(
-    logContext: LogContext,
-    latency: number,
-    success: boolean,
-    context: string,
-    taskName: string,
-    description: string,
-  ) {
-    this.logger.trace(description, context);
-    return this.externalCallLogRepository.createLog({
-      traceId: logContext.traceId,
-      submissionId: logContext.logInfo.submissionId,
-      context,
-      success,
-      latency,
-      taskName,
-      description,
-    });
-  }
-
-  onModuleInit() {
-    const endpoint = this.configService.get<string>('AZURE_ENDPOINT_URL');
-    const apiKey = this.configService.get<string>('AZURE_ENDPOINT_KEY');
-    const apiVersion =
-      this.configService.get<string>('OPENAI_API_VERSION') || '';
-    this.deploymentName =
-      this.configService.get<string>('AZURE_OPENAI_DEPLOYMENT_NAME') || '';
-
-    if (!apiKey || !this.deploymentName || !endpoint || !apiVersion) {
-      throw new Error('Azure OpenAI configuration is missing');
-    }
-
-    this.openAIClient = new AzureOpenAI({
-      endpoint,
-      apiKey,
-      deployment: this.deploymentName,
-      apiVersion,
-    });
   }
 }

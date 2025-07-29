@@ -116,6 +116,8 @@ export class SubmissionsReviewService {
       logContext,
       videoUploadResult.data.videoSasUrl!,
       audioUploadResult.data.audioSasUrl!,
+      dto.studentId,
+      dto.studentName,
     );
   }
 
@@ -124,6 +126,8 @@ export class SubmissionsReviewService {
     logContext: LogContext<ReviewLogInfo>,
     videoSasUrl: string,
     audioSasUrl: string,
+    studentId: string,
+    studentName: string,
   ): Promise<StrictReturn<SubmissionResult>> {
     /**
      * Get review prompt
@@ -168,15 +172,18 @@ export class SubmissionsReviewService {
 
     return {
       success: true,
-      message: 'Submission completed',
+      message: 'Review completed',
       data: {
-        message: 'Submission completed',
+        message: 'Review completed',
         videoUrl: videoSasUrl,
         audioUrl: audioSasUrl,
         score: parsedReviewResult.data.score,
         feedback: parsedReviewResult.data.feedback,
         highlights: parsedReviewResult.data.highlights,
         highlightedText,
+        studentId,
+        studentName,
+        submitText,
       },
     };
   }

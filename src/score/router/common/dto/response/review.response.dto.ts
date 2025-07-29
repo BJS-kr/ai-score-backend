@@ -1,24 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CommonResponseDto } from 'src/common/response/common.response.dto';
 import {
   isSuccess,
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
 import { SubmissionResult } from 'src/score/core/submissions/interfaces/submission.result';
-import { SubmissionRequestDto } from '../request/submission.request.dto';
+import { SubmissionRequestDto } from '../../../submissions/dto/request/submission.request.dto';
 
-export class SubmissionResponseDto extends CommonResponseDto {
+export class ReviewResponseDto {
+  @ApiProperty({
+    enum: ['ok', 'failed'],
+  })
+  result: 'ok' | 'failed';
+
+  @ApiProperty({
+    type: 'string',
+    description: 'Contextual message',
+  })
+  message: string | null;
+
   @ApiProperty({
     type: String,
     description: 'The student ID',
   })
-  studentId: string;
+  studentId: string | null;
 
   @ApiProperty({
     type: String,
     description: 'The student name',
   })
-  studentName: string;
+  studentName: string | null;
 
   @ApiPropertyOptional({
     type: Number,
@@ -67,15 +77,14 @@ export class SubmissionResponseDto extends CommonResponseDto {
 
   static build(
     submissionResult: StrictReturn<SubmissionResult>,
-    { studentId, studentName, submitText }: SubmissionRequestDto,
     apiLatency: number,
-  ): SubmissionResponseDto {
+  ): ReviewResponseDto {
     if (!isSuccess(submissionResult)) {
       return {
         result: 'failed',
-        message: submissionResult.message ?? null,
-        studentId,
-        studentName,
+        message: submissionResult.error ?? null,
+        studentId: null,
+        studentName: null,
         score: null,
         feedback: null,
         highlights: null,
@@ -89,12 +98,12 @@ export class SubmissionResponseDto extends CommonResponseDto {
     return {
       result: submissionResult.success ? 'ok' : 'failed',
       message: submissionResult.message ?? null,
-      studentId,
-      studentName,
+      studentId: submissionResult.data.studentId,
+      studentName: submissionResult.data.studentName,
       score: submissionResult.data.score,
-      feedback: submissionResult.data?.feedback,
-      highlights: submissionResult.data?.highlights,
-      submitText: submissionResult.success ? submitText : null,
+      feedback: submissionResult.data.feedback,
+      highlights: submissionResult.data.highlights,
+      submitText: submissionResult.data.submitText,
       highlightSubmitText: submissionResult.data.highlightedText,
       mediaUrl: {
         video: submissionResult.data.videoUrl,

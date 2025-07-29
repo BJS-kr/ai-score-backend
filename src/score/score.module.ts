@@ -19,7 +19,13 @@ import { RevisionRepository } from './IO/respositories/revision.repository';
 import { RevisionQueryService } from './core/revisions/revision.query.service';
 import { BullModule } from '@nestjs/bullmq';
 import { JOB_NAME } from './cron/job.constants';
+import { ExternalLogger } from './helper/external-logger/external.logger';
+import { StatisticsService } from './cron/statistics.service';
+import { StatisticsRepository } from './IO/respositories/statistics.repository';
+import { CronReviewProducer } from './cron/queue/producers/cron.review.producer';
+import { CronReviewConsumer } from './cron/queue/consumers/cron.review.consumer';
 
+// TODO 모듈 분리하기
 @Module({
   imports: [
     DbModule,
@@ -50,11 +56,16 @@ import { JOB_NAME } from './cron/job.constants';
     RevisionReviewService,
     RevisionQueryService,
     /**
+     * Statistics
+     */
+    StatisticsService,
+    /**
      * Repositories
      */
     SubmissionRepository,
     ExternalCallLogRepository,
     RevisionRepository,
+    StatisticsRepository,
     /**
      * Integrations
      */
@@ -69,6 +80,12 @@ import { JOB_NAME } from './cron/job.constants';
      * Helpers
      */
     Processor,
+    ExternalLogger,
+    /**
+     * Cron
+     */
+    CronReviewProducer,
+    CronReviewConsumer,
   ],
 })
 export class ScoreModule {}

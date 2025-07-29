@@ -59,12 +59,23 @@ export class SubmissionRepository {
   }
 
   async getSubmissions(pagination: Pagination, status?: SubmissionStatus) {
-    return this.readClient.submission.findMany({
+    const total = await this.readClient.submission.count({
+      where: {
+        status,
+      },
+    });
+
+    const submissions = await this.readClient.submission.findMany({
       ...pagination,
       where: {
         status,
       },
     });
+
+    return {
+      total,
+      submissions,
+    };
   }
 
   async getSubmission(submissionId: string) {
@@ -164,6 +175,13 @@ export class SubmissionRepository {
   getSubmissionMedia(submissionId: string, mediaType: MediaType) {
     return this.readClient.submissionMedia.findFirst({
       where: { submissionId, mediaType },
+    });
+  }
+
+  updateSubmissionRetried(submissionId: string) {
+    return this.writeClient.tx.submission.update({
+      where: { id: submissionId },
+      data: { retried: true },
     });
   }
 }

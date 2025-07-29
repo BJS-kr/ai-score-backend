@@ -4,28 +4,45 @@ import { JOB_NAME } from '../../job.constants';
 import { RevisionReviewService } from 'src/score/core/revisions/revision.review.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { v4 as uuidv4 } from 'uuid';
+import { LoggerService } from 'src/common/logger/logger.service';
+import { trace } from '@opentelemetry/api';
 
 @Processor(JOB_NAME.CRON_REVIEW, {
   concurrency: 3,
 })
 export class CronReviewConsumer extends WorkerHost {
-  constructor(private readonly revisionReviewService: RevisionReviewService) {
+  constructor(
+    private readonly revisionReviewService: RevisionReviewService,
+    private readonly logger: LoggerService,
+  ) {
     super();
   }
   async process(job: Job<{ submissionId: string }, void>) {
-    const submissionId = job.data.submissionId;
+    trace
+      .getTracer('CronReviewConsumer')
+      .startActiveSpan('process', async (span) => {
+        this.logger.info(
+          `Cron: processing submission ${job.data.submissionId}`,
+        );
+        const submissionId = job.data.submissionId;
 
-    const logContext: LogContext = {
-      traceId: uuidv4(),
-      requestUri: job.name,
-      startTime: Date.now(),
-      logInfo: {
-        submissionId,
-      },
-    };
+        const logContext: LogContext = {
+          traceId: uuidv4(),
+          requestUri: job.name,
+          startTime: Date.now(),
+          logInfo: {
+            submissionId,
+          },
+        };
 
-    await this.revisionReviewService.reviseSubmission(logContext);
+        await this.revisionReviewService.reviseSubmission(logContext);
+
+        this.logger.info(
+          `Cron: revised by cron submission ${submissionId}`,
+          'CronReviewConsumer',
+        );
+
+        span.end();
+      });
   }
 }
-
-// TODO: Cron에서도 telemetry를 볼 수 있게

@@ -16,7 +16,7 @@ import {
 } from './dto/request/submission.request.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileSizeValidationPipe } from 'src/common/validators/fileSize.validator';
-import { SubmissionResponseDto } from './dto/response/submission.response.dto';
+import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
 import {
   LogContext,
   NewSubmissionLogInfo,
@@ -24,11 +24,11 @@ import {
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Pagination } from 'src/common/decorators/param/pagination';
 import { SubmissionsQueryService } from '../../core/submissions/submissions.query.service';
-import { SubmissionsQueryResponseDto } from './dto/response/submissions.query.response.dto';
-import { Submission } from '@prisma/client';
+import { SubmissionQueryResponseDto } from './dto/response/submission.query.response.dto';
 import { SubmissionsQueryRequestDto } from './dto/request/submissions.query.request.dto';
 import Combined from 'src/common/decorators/api';
 import Custom from 'src/common/decorators/param';
+import { SubmissionsQueryResponseDto } from './dto/response/submissions.query.response.dto';
 
 @Controller('submissions')
 @ApiTags('Submissions')
@@ -46,20 +46,19 @@ export class SubmissionController {
   })
   @Combined.AlwaysOk({
     description: 'Submission result',
-    type: SubmissionResponseDto,
+    type: ReviewResponseDto,
   })
   async submitForReview(
     @UploadedFile(FileSizeValidationPipe) file: Express.Multer.File,
     @Body() dto: SubmissionRequestDto,
     @Custom.LogContext() logContext: LogContext<NewSubmissionLogInfo>,
-  ): Promise<SubmissionResponseDto> {
+  ): Promise<ReviewResponseDto> {
     if (!file) {
-      return SubmissionResponseDto.build(
+      return ReviewResponseDto.build(
         {
           success: false,
           error: 'File is required',
         },
-        dto,
         Date.now() - logContext.startTime,
       );
     }
@@ -71,13 +70,13 @@ export class SubmissionController {
     );
     const apiLatency = Date.now() - logContext.startTime;
 
-    return SubmissionResponseDto.build(submissionResult, dto, apiLatency);
+    return ReviewResponseDto.build(submissionResult, apiLatency);
   }
 
   @Get()
   @Combined.AlwaysOk({
     description: 'return all submissions by pagination',
-    type: [SubmissionsQueryResponseDto],
+    type: SubmissionsQueryResponseDto,
   })
   async getSubmissions(
     @Custom.Pagination({
@@ -90,14 +89,14 @@ export class SubmissionController {
     })
     pagination: Pagination,
     @Query() { status }: SubmissionsQueryRequestDto,
-  ): Promise<Submission[]> {
+  ) {
     return this.queryService.getSubmissions(pagination, status);
   }
 
   @Get(':submissionId')
   @Combined.AlwaysOk({
     description: 'return submission by submissionId',
-    type: SubmissionResponseDto,
+    type: SubmissionQueryResponseDto,
   })
   async getSubmission(
     @Param('submissionId', ParseUUIDPipe) submissionId: string,
