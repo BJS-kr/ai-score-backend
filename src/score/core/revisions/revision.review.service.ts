@@ -10,7 +10,9 @@ import { SubmissionResult } from '../submissions/interfaces/submission.result';
 import { MediaType, RevisionStatus } from '@prisma/client';
 import { Processor } from 'src/score/helper/processor/processor';
 import { RevisionRepository } from 'src/score/IO/respositories/revision.repository';
+import { Transactional } from '@nestjs-cls/transactional';
 
+// TODO: 로그 추가
 @Injectable()
 export class RevisionReviewService {
   constructor(
@@ -20,6 +22,7 @@ export class RevisionReviewService {
     private readonly processor: Processor,
   ) {}
 
+  @Transactional()
   async reviseSubmission(
     logContext: LogContext,
   ): Promise<StrictReturn<SubmissionResult>> {

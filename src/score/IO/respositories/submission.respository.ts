@@ -73,6 +73,15 @@ export class SubmissionRepository {
     });
   }
 
+  async getFailedAndNotRetriedSubmissions() {
+    return this.readClient.submission.findMany({
+      where: {
+        status: SubmissionStatus.FAILED,
+        retried: false,
+      },
+    });
+  }
+
   async completeSubmission(
     submissionId: string,
     score: number,

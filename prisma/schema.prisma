@@ -15,9 +15,9 @@ datasource db {
 }
 
 model Student {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   submissions Submission[]
 
@@ -30,6 +30,7 @@ model Submission {
   studentName   String           @map("student_name")
   componentType String           @map("component_type")
   submitText    String           @map("submit_text")
+  retried       Boolean          @default(false) @map("retried")
   status        SubmissionStatus @default(PENDING)
 
   // 완료 시 정보 적재
@@ -116,10 +117,10 @@ model SubmissionExternalCallLog {
 }
 
 model Revision {
-  id                 String         @id @default(uuid())
-  submissionId       String         @map("submission_id")
-  status             RevisionStatus @default(PENDING)
-  createdAt          DateTime       @default(now()) @map("created_at")
+  id           String         @id @default(uuid())
+  submissionId String         @map("submission_id")
+  status       RevisionStatus @default(PENDING)
+  createdAt    DateTime       @default(now()) @map("created_at")
 
   submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
@@ -128,53 +129,31 @@ model Revision {
 
 model StatsDaily {
   id                    String   @id @default(uuid())
-  date                  DateTime @unique @db.Date
   totalSubmissions      Int      @default(0) @map("total_submissions")
   successfulSubmissions Int      @default(0) @map("successful_submissions")
   failedSubmissions     Int      @default(0) @map("failed_submissions")
-  pendingSubmissions    Int      @default(0) @map("pending_submissions")
-  totalRevisions        Int      @default(0) @map("total_revisions")
-  averageScore          Float?   @map("average_score")
-  averageLatency        Float?   @map("average_latency")
   createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
 
   @@map("stats_daily")
 }
 
 model StatsWeekly {
   id                    String   @id @default(uuid())
-  weekStart             DateTime @map("week_start") @db.Date
-  weekEnd               DateTime @map("week_end") @db.Date
   totalSubmissions      Int      @default(0) @map("total_submissions")
   successfulSubmissions Int      @default(0) @map("successful_submissions")
   failedSubmissions     Int      @default(0) @map("failed_submissions")
-  pendingSubmissions    Int      @default(0) @map("pending_submissions")
-  totalRevisions        Int      @default(0) @map("total_revisions")
-  averageScore          Float?   @map("average_score")
-  averageLatency        Float?   @map("average_latency")
   createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
 
-  @@unique([weekStart, weekEnd])
   @@map("stats_weekly")
 }
 
 model StatsMonthly {
   id                    String   @id @default(uuid())
-  year                  Int
-  month                 Int
   totalSubmissions      Int      @default(0) @map("total_submissions")
   successfulSubmissions Int      @default(0) @map("successful_submissions")
   failedSubmissions     Int      @default(0) @map("failed_submissions")
-  pendingSubmissions    Int      @default(0) @map("pending_submissions")
-  totalRevisions        Int      @default(0) @map("total_revisions")
-  averageScore          Float?   @map("average_score")
-  averageLatency        Float?   @map("average_latency")
   createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
 
-  @@unique([year, month])
   @@map("stats_monthly")
 }
 
@@ -196,7 +175,7 @@ enum SubmissionLogStatus {
 }
 
 enum RevisionStatus {
-PENDING
+  PENDING
   FAILED
   COMPLETED
 }

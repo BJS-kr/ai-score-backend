@@ -13,6 +13,11 @@ export class RevisionRepository {
   ) {}
 
   async createRevision(submissionId: string) {
+    await this.writeClient.tx.submission.update({
+      where: { id: submissionId },
+      data: { retried: true },
+    });
+
     return this.writeClient.tx.revision.create({
       data: { submissionId },
     });
