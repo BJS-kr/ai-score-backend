@@ -4,7 +4,7 @@ import { EVERY_MONTH } from './cron.expressions';
 import { StatisticsRepository } from '../IO/respositories/statistics.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { trace } from '@opentelemetry/api';
-import { traced } from 'src/system/telemetry/run.in.trace';
+import { traced } from 'src/system/telemetry/traced';
 
 export type Stats = {
   total: number;
@@ -28,6 +28,8 @@ export class StatisticsService {
         `Daily statistics: ${JSON.stringify(stat)}`,
         'StatisticsService',
       );
+
+      return stat;
     });
   }
 
@@ -42,6 +44,8 @@ export class StatisticsService {
         `Weekly statistics: ${JSON.stringify(stat)}`,
         'StatisticsService',
       );
+
+      return stat;
     });
   }
 
@@ -56,6 +60,8 @@ export class StatisticsService {
         `Monthly statistics: ${JSON.stringify(stat)}`,
         'StatisticsService',
       );
+
+      return stat;
     });
   }
 

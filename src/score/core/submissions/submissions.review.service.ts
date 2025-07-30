@@ -152,6 +152,8 @@ export class SubmissionsReviewService {
     if (!isSuccess(parsedReviewResult)) {
       return parsedReviewResult;
     }
+    // TODO: open ai integartion does not handle error. fix it to return StrictReturn
+    // TODO: ai reponse + parsing logic shoudld be retried 3 times
 
     /**
      * Highlight text

@@ -6,7 +6,7 @@ import { JOB_NAME } from '../../job.constants';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { trace } from '@opentelemetry/api';
-import { traced } from 'src/system/telemetry/run.in.trace';
+import { traced } from 'src/system/telemetry/traced';
 
 @Injectable()
 export class CronReviewProducer {

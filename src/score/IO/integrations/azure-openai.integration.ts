@@ -8,6 +8,7 @@ import { ExternalCallLogRepository } from '../respositories/external.call.log.re
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
 import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
 import '@azure/openai/types';
+import { caught } from 'src/common/util/caught';
 
 type RawReviewResponse = {
   reviewPrompt: string;
@@ -80,17 +81,32 @@ export class AzureOpenAIIntegration implements OnModuleInit {
     );
 
     const start = Date.now();
-    const response = await this.openAIClient.chat.completions.create({
-      model: '',
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
+    const response = await caught(
+      this.openAIClient.chat.completions.create({
+        model: '',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      }),
+    );
 
     const latency = Date.now() - start;
+
+    if (response instanceof Error) {
+      this.logger.error(
+        'Error calling Azure OpenAI',
+        response,
+        CONTEXT.AZURE_OPENAI,
+      );
+
+      return {
+        success: false,
+        error: response.message,
+      };
+    }
 
     if (!response.choices || response.choices.length === 0) {
       await this.externalLogger.logExternalCall(

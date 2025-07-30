@@ -6,7 +6,7 @@ import { LogContext } from 'src/common/decorators/param/log.context';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { trace } from '@opentelemetry/api';
-import { traced } from 'src/system/telemetry/run.in.trace';
+import { traced } from 'src/system/telemetry/traced';
 
 @Processor(JOB_NAME.CRON_REVIEW, {
   concurrency: 3,
