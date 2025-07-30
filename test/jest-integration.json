@@ -7,5 +7,8 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "testTimeout": 60000,
-  "setupFilesAfterEnv": ["<rootDir>/integration/setup.ts"]
+  "setupFilesAfterEnv": ["<rootDir>/integration/setup.ts"],
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/../src/$1"
+  }
 }
