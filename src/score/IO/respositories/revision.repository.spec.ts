@@ -6,6 +6,7 @@ import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-pr
 import { RevisionStatus } from '@prisma/client';
 import { LogContext } from 'src/common/decorators/param/log.context';
 import { Pagination } from 'src/common/decorators/param/pagination';
+import { createMock } from '@golevelup/ts-jest';
 
 describe('RevisionRepository', () => {
   let repository: RevisionRepository;
@@ -44,25 +45,8 @@ describe('RevisionRepository', () => {
   };
 
   beforeEach(async () => {
-    const mockWriteClient = {
-      tx: {
-        submissionLog: {
-          create: jest.fn(),
-        },
-        revision: {
-          create: jest.fn(),
-          update: jest.fn(),
-        },
-      },
-    };
-
-    const mockReadClient = {
-      revision: {
-        count: jest.fn(),
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-      },
-    };
+    const mockWriteClient = createMock<TransactionHost>();
+    const mockReadClient = createMock<PrismaService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

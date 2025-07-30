@@ -3,6 +3,7 @@ import { SubmissionsQueryService } from './submissions.query.service';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { Pagination } from 'src/common/decorators/param/pagination';
 import { SubmissionStatus } from '@prisma/client';
+import { createMock } from '@golevelup/ts-jest';
 
 describe('SubmissionsQueryService', () => {
   let service: SubmissionsQueryService;
@@ -35,10 +36,7 @@ describe('SubmissionsQueryService', () => {
   };
 
   beforeEach(async () => {
-    const mockSubmissionRepository = {
-      getSubmissions: jest.fn(),
-      getSubmission: jest.fn(),
-    };
+    const mockSubmissionRepository = createMock<SubmissionRepository>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

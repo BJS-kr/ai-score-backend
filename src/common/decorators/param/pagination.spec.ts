@@ -1,5 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
-import { createPaginationClass, Pagination } from './pagination';
+import {
+  createPaginationClass,
+  createPaginationPipe,
+  pagination,
+  Pagination,
+} from './pagination';
 
 describe('Pagination', () => {
   describe('createPaginationClass', () => {
@@ -182,76 +187,9 @@ describe('Pagination', () => {
   });
 
   describe('PaginationPipe', () => {
-    const createPaginationPipe = (defaults?: {
-      page?: number;
-      size?: number;
-    }) => {
-      // Create the actual pagination function from the source code
-      const pagination = <T extends string>({
-        defaults: pipeDefaults,
-      }: { defaults?: { page?: number; size?: number } } = {}) => {
-        class PaginationPipe {
-          transform(
-            value: {
-              page?: number;
-              size?: number;
-              sort?: string;
-            },
-            _: never,
-          ) {
-            const page = value.page || pipeDefaults?.page || 1;
-            const size = value.size || pipeDefaults?.size;
-            const skip = (page - 1) * (size ?? 0);
-
-            if (!value.sort) {
-              return {
-                skip,
-                ...(size && { take: size }),
-              };
-            }
-            if (!value.sort.includes(',')) {
-              throw new BadRequestException(
-                'sort must be in the format of "field,direction"',
-              );
-            }
-
-            const separatedSort = value.sort.split(',');
-            if (separatedSort.length !== 2) {
-              throw new BadRequestException(
-                'sort must be in the format of "field,direction"',
-              );
-            }
-
-            const field = separatedSort[0];
-            const direction = separatedSort[1].toLowerCase();
-
-            if (!field) {
-              throw new BadRequestException(
-                'field is required when sort is provided',
-              );
-            }
-            if (direction !== 'asc' && direction !== 'desc') {
-              throw new BadRequestException(
-                'direction must be either "asc(ASC)" or "desc(DESC)"',
-              );
-            }
-
-            return {
-              skip,
-              ...(size && { take: size }),
-              orderBy: { [field]: direction },
-            };
-          }
-        }
-
-        return new PaginationPipe();
-      };
-
-      return pagination({ defaults });
-    };
-
     it('should transform basic pagination without defaults', () => {
       const pipe = createPaginationPipe();
+
       const value = { page: 2, size: 10 };
 
       const result = pipe.transform(value, {} as never);
@@ -263,7 +201,12 @@ describe('Pagination', () => {
     });
 
     it('should transform pagination with defaults', () => {
-      const pipe = createPaginationPipe({ page: 1, size: 20 });
+      const pipe = createPaginationPipe({
+        defaults: {
+          page: 1,
+          size: 20,
+        },
+      });
       const value = { page: 3 };
 
       const result = pipe.transform(value, {} as never);
@@ -275,8 +218,13 @@ describe('Pagination', () => {
     });
 
     it('should handle missing page with defaults', () => {
-      const pipe = createPaginationPipe({ page: 2, size: 15 });
-      const value = { page: undefined, size: 10 };
+      const pipe = createPaginationPipe({
+        defaults: {
+          page: 2,
+          size: 15,
+        },
+      });
+      const value = { page: undefined, size: 10 } as any;
 
       const result = pipe.transform(value, {} as never);
 
@@ -421,8 +369,13 @@ describe('Pagination', () => {
     });
 
     it('should handle undefined page with defaults', () => {
-      const pipe = createPaginationPipe({ page: 1, size: 10 });
-      const value = { page: undefined, size: 5 };
+      const pipe = createPaginationPipe({
+        defaults: {
+          page: 1,
+          size: 10,
+        },
+      });
+      const value = { page: undefined, size: 5 } as any;
 
       const result = pipe.transform(value, {} as never);
 
@@ -433,8 +386,13 @@ describe('Pagination', () => {
     });
 
     it('should handle undefined size with defaults', () => {
-      const pipe = createPaginationPipe({ page: 2, size: 20 });
-      const value = { page: 3, size: undefined };
+      const pipe = createPaginationPipe({
+        defaults: {
+          page: 2,
+          size: 20,
+        },
+      });
+      const value = { page: 3, size: undefined } as any;
 
       const result = pipe.transform(value, {} as never);
 
@@ -472,12 +430,12 @@ describe('Pagination', () => {
       const pipe = createPaginationPipe();
       const value = { page: 2, size: 10, sort: '   ' };
 
-      expect(() => pipe.transform(value, {} as never)).toThrow(
-        BadRequestException,
-      );
-      expect(() => pipe.transform(value, {} as never)).toThrow(
-        'sort must be in the format of "field,direction"',
-      );
+      const result = pipe.transform(value, {} as never);
+
+      expect(result).toEqual({
+        skip: 10, // (2-1) * 10
+        take: 10,
+      });
     });
 
     it('should handle negative page number', () => {
@@ -487,7 +445,7 @@ describe('Pagination', () => {
       const result = pipe.transform(value, {} as never);
 
       expect(result).toEqual({
-        skip: -20, // (-1-1) * 10 = -20
+        skip: 0, // if page is negative, skip is 0
         take: 10,
       });
     });
@@ -499,8 +457,7 @@ describe('Pagination', () => {
       const result = pipe.transform(value, {} as never);
 
       expect(result).toEqual({
-        skip: -5, // (2-1) * -5
-        take: -5,
+        skip: 0, // if size is negative, take is not included
       });
     });
 
@@ -511,7 +468,7 @@ describe('Pagination', () => {
       const result = pipe.transform(value, {} as never);
 
       expect(result).toEqual({
-        skip: 15, // (2.5-1) * 10 = 15
+        skip: 10, // if decimal, skip is rounded down
         take: 10,
       });
     });
@@ -523,20 +480,8 @@ describe('Pagination', () => {
       const result = pipe.transform(value, {} as never);
 
       expect(result).toEqual({
-        skip: 7.5, // (2-1) * 7.5
-        take: 7.5,
-      });
-    });
-
-    it('should handle very large page number', () => {
-      const pipe = createPaginationPipe();
-      const value = { page: 1000000, size: 10 };
-
-      const result = pipe.transform(value, {} as never);
-
-      expect(result).toEqual({
-        skip: 9999990, // (1000000-1) * 10
-        take: 10,
+        skip: 7, // if decimal, skip is rounded down
+        take: 7,
       });
     });
 

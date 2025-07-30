@@ -40,33 +40,8 @@ describe('SubmissionRepository', () => {
   };
 
   beforeEach(async () => {
-    mockReadClient = {
-      submission: {
-        count: jest.fn(),
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-        findFirst: jest.fn(),
-      },
-      submissionMedia: {
-        findFirst: jest.fn(),
-      },
-    };
-
-    mockWriteClient = {
-      tx: {
-        submission: {
-          create: jest.fn(),
-          update: jest.fn(),
-        },
-        submissionLog: {
-          create: jest.fn(),
-          update: jest.fn(),
-        },
-        submissionMedia: {
-          create: jest.fn(),
-        },
-      },
-    };
+    mockReadClient = createMock<PrismaService>();
+    mockWriteClient = createMock<TransactionHost>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [

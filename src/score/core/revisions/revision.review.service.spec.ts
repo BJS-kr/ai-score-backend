@@ -9,6 +9,7 @@ import { LogContext } from 'src/common/decorators/param/log.context';
 import { SubmissionResult } from '../submissions/interfaces/submission.result';
 import { MediaType, RevisionStatus } from '@prisma/client';
 import { isSuccess } from 'src/score/helper/processor/strict.return';
+import { createMock } from '@golevelup/ts-jest';
 
 // Mock the @Transactional decorator to prevent issues in tests
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -101,39 +102,23 @@ describe('RevisionReviewService', () => {
         RevisionReviewService,
         {
           provide: SubmissionsReviewService,
-          useValue: {
-            submitForReview: jest.fn(),
-          },
+          useValue: createMock<SubmissionsReviewService>(),
         },
         {
           provide: SubmissionRepository,
-          useValue: {
-            getSubmission: jest.fn(),
-            updateSubmissionRetried: jest.fn(),
-            getSubmissionMedia: jest.fn(),
-          },
+          useValue: createMock<SubmissionRepository>(),
         },
         {
           provide: RevisionRepository,
-          useValue: {
-            createRevision: jest.fn(),
-            updateRevision: jest.fn(),
-          },
+          useValue: createMock<RevisionRepository>(),
         },
         {
           provide: Processor,
-          useValue: {
-            accumulateContextInfo: jest.fn(),
-          },
+          useValue: createMock<Processor>(),
         },
         {
           provide: LoggerService,
-          useValue: {
-            trace: jest.fn(),
-            error: jest.fn(),
-            warn: jest.fn(),
-            info: jest.fn(),
-          },
+          useValue: createMock<LoggerService>(),
         },
       ],
     }).compile();

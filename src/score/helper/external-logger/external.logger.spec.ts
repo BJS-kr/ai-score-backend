@@ -3,6 +3,7 @@ import { ExternalLogger } from './external.logger';
 import { ExternalCallLogRepository } from '../../IO/respositories/external.call.log.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log.context';
+import { createMock } from '@golevelup/ts-jest';
 
 describe('ExternalLogger', () => {
   let service: ExternalLogger;
@@ -19,16 +20,10 @@ describe('ExternalLogger', () => {
   };
 
   beforeEach(async () => {
-    const mockExternalCallLogRepository = {
-      createLog: jest.fn(),
-    };
+    const mockExternalCallLogRepository =
+      createMock<ExternalCallLogRepository>();
 
-    const mockLoggerService = {
-      trace: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      info: jest.fn(),
-    };
+    const mockLoggerService = createMock<LoggerService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
