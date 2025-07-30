@@ -33,7 +33,7 @@ export interface VideoInfo {
 const MB = 1024 * 1024;
 
 @Injectable()
-export class VideoService implements OnModuleInit {
+export class FfmpegIntegration implements OnModuleInit {
   private tempDirectory: string;
   private MAX_FILE_SIZE_MB: number;
 

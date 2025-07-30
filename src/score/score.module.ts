@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { SubmissionController } from './router/submissions/submissions.controller';
 import { SubmissionsReviewService } from './core/submissions/submissions.review.service';
 import { AzureBlobStorageIntegration } from './IO/integrations/azure-blob-storage.integration';
-import { VideoService } from './IO/video/video.service';
+import { FfmpegIntegration } from './IO/integrations/ffmpeg.integration';
 import { AzureOpenAIIntegration } from './IO/integrations/azure-openai.integration';
 import { DbModule } from 'src/system/database/db.module';
 import { Processor } from 'src/score/helper/processor/processor';
@@ -74,7 +74,7 @@ import { CronReviewConsumer } from './cron/queue/consumers/cron.review.consumer'
     /**
      * Logics
      */
-    VideoService,
+    FfmpegIntegration,
     ReviewParser,
     /**
      * Helpers

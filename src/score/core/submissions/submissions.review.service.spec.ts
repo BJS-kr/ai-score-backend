@@ -3,7 +3,7 @@ import { SubmissionsReviewService } from './submissions.review.service';
 import { SubmissionRepository } from '../../IO/respositories/submission.respository';
 import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
 import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
-import { VideoService } from '../../IO/video/video.service';
+import { FfmpegIntegration } from '../../IO/integrations/ffmpeg.integration';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { ReviewParser } from './submissions.review.parser';
 import { Processor } from 'src/score/helper/processor/processor';
@@ -24,7 +24,7 @@ describe('SubmissionsReviewService', () => {
   let submissionRepository: jest.Mocked<SubmissionRepository>;
   let azureBlobStorageIntegration: jest.Mocked<AzureBlobStorageIntegration>;
   let azureOpenAIIntegration: jest.Mocked<AzureOpenAIIntegration>;
-  let videoService: jest.Mocked<VideoService>;
+  let ffmpegIntegration: jest.Mocked<FfmpegIntegration>;
   let reviewParser: jest.Mocked<ReviewParser>;
   let processor: jest.Mocked<Processor>;
 
@@ -62,7 +62,7 @@ describe('SubmissionsReviewService', () => {
     const mockAzureBlobStorageIntegration =
       createMock<AzureBlobStorageIntegration>();
     const mockAzureOpenAIIntegration = createMock<AzureOpenAIIntegration>();
-    const mockVideoService = createMock<VideoService>();
+    const mockFfmpegIntegration = createMock<FfmpegIntegration>();
     const mockLogger = createMock<LoggerService>();
     const mockReviewParser = createMock<ReviewParser>();
     const mockProcessor = createMock<Processor>();
@@ -89,8 +89,8 @@ describe('SubmissionsReviewService', () => {
           useValue: mockAzureOpenAIIntegration,
         },
         {
-          provide: VideoService,
-          useValue: mockVideoService,
+          provide: FfmpegIntegration,
+          useValue: mockFfmpegIntegration,
         },
         {
           provide: LoggerService,
@@ -111,7 +111,7 @@ describe('SubmissionsReviewService', () => {
     submissionRepository = module.get(SubmissionRepository);
     azureBlobStorageIntegration = module.get(AzureBlobStorageIntegration);
     azureOpenAIIntegration = module.get(AzureOpenAIIntegration);
-    videoService = module.get(VideoService);
+    ffmpegIntegration = module.get(FfmpegIntegration);
     reviewParser = module.get(ReviewParser);
     processor = module.get(Processor);
   });
@@ -124,7 +124,7 @@ describe('SubmissionsReviewService', () => {
     submissionRepository.checkAlreadySubmitted.mockResolvedValue(null);
     submissionRepository.createSubmission.mockResolvedValue('sub-123');
 
-    videoService.processVideo.mockResolvedValue({
+    ffmpegIntegration.processVideo.mockResolvedValue({
       success: true,
       data: {
         localVideoPath: '/tmp/processed-video.mp4',

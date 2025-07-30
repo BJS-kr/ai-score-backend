@@ -6,7 +6,7 @@ import {
 } from '../../IO/respositories/submission.respository';
 import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
 import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
-import { VideoService } from '../../IO/video/video.service';
+import { FfmpegIntegration } from '../../IO/integrations/ffmpeg.integration';
 import {
   isSuccess,
   StrictReturn,
@@ -30,7 +30,7 @@ export class SubmissionsReviewService {
     private readonly submissionRepository: SubmissionRepository,
     private readonly azureBlobStorageIntegration: AzureBlobStorageIntegration,
     private readonly azureOpenAIIntegration: AzureOpenAIIntegration,
-    private readonly videoService: VideoService,
+    private readonly ffmpegIntegration: FfmpegIntegration,
     private readonly logger: LoggerService,
     private readonly reviewParser: ReviewParser,
     private readonly processor: Processor,
@@ -221,7 +221,7 @@ export class SubmissionsReviewService {
     logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     return this.processor.process(
-      await this.videoService.processVideo({
+      await this.ffmpegIntegration.processVideo({
         inputFilePath: videoPath,
         submissionId: logContext.logInfo.submissionId,
       }),
