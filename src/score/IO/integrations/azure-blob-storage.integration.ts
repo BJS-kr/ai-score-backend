@@ -14,7 +14,6 @@ import {
   LogContext,
   NewSubmissionLogInfo,
 } from 'src/common/decorators/param/log-context/log.context';
-import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
 import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
 
 export interface FileUploadResponse {

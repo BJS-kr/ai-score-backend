@@ -18,7 +18,7 @@ describe('FfmpegIntegration', () => {
       providers: [FfmpegIntegration],
     }).compile();
 
-    module.init();
+    await module.init();
 
     integration = module.get<FfmpegIntegration>(FfmpegIntegration);
 
@@ -29,7 +29,7 @@ describe('FfmpegIntegration', () => {
     }
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     // Clean up test output directory
     if (fs.existsSync(testOutputDir)) {
       const files = fs.readdirSync(testOutputDir);

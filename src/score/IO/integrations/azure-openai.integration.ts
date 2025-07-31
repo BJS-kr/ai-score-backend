@@ -4,7 +4,6 @@ import { AzureOpenAI } from 'openai';
 import { StrictReturn } from '../../helper/processor/strict.return';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
-import { ExternalCallLogRepository } from '../respositories/external.call.log.repository';
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
 import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
 import '@azure/openai/types';

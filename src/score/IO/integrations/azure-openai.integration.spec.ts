@@ -27,8 +27,6 @@ jest.mock('openai', () => ({
 describe('AzureOpenAIIntegration', () => {
   let service: AzureOpenAIIntegration;
   let configService: jest.Mocked<ConfigService>;
-  let loggerService: jest.Mocked<LoggerService>;
-  let externalLogger: jest.Mocked<ExternalLogger>;
 
   beforeEach(async () => {
     const mockConfigService = createMock<ConfigService>();
@@ -55,8 +53,6 @@ describe('AzureOpenAIIntegration', () => {
 
     service = module.get<AzureOpenAIIntegration>(AzureOpenAIIntegration);
     configService = module.get(ConfigService);
-    loggerService = module.get(LoggerService);
-    externalLogger = module.get(ExternalLogger);
 
     // Clear all mocks
     jest.clearAllMocks();

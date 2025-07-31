@@ -3,7 +3,6 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { EVERY_MONTH } from './cron.expressions';
 import { StatisticsRepository } from '../IO/respositories/statistics.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { trace } from '@opentelemetry/api';
 import { traced } from 'src/system/telemetry/traced';
 
 export type Stats = {
@@ -19,7 +18,7 @@ export class StatisticsService {
   ) {}
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleDailyStatistics() {
-    traced('StatisticsService', 'handleDailyStatistics', async () => {
+    await traced('StatisticsService', 'handleDailyStatistics', async () => {
       const yesterday = this.getDaysAgo(1);
       const dailyStats =
         await this.statisticsRepository.getStatsByFromDate(yesterday);
@@ -35,7 +34,7 @@ export class StatisticsService {
 
   @Cron(CronExpression.EVERY_WEEK)
   async handleWeeklyStatistics() {
-    traced('StatisticsService', 'handleWeeklyStatistics', async () => {
+    await traced('StatisticsService', 'handleWeeklyStatistics', async () => {
       const sevenDaysAgo = this.getDaysAgo(7);
       const stats =
         await this.statisticsRepository.getStatsByFromDate(sevenDaysAgo);
@@ -51,7 +50,7 @@ export class StatisticsService {
 
   @Cron(EVERY_MONTH)
   async handleMonthlyStatistics() {
-    traced('StatisticsService', 'handleMonthlyStatistics', async () => {
+    await traced('StatisticsService', 'handleMonthlyStatistics', async () => {
       const lastMonthFirstDay = this.getLastMonthFirstDay();
       const stats =
         await this.statisticsRepository.getStatsByFromDate(lastMonthFirstDay);

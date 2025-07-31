@@ -24,10 +24,6 @@ jest.mock('@nestjs-cls/transactional', () => ({
 describe('SubmissionsReviewService', () => {
   let service: SubmissionsService;
   let submissionRepository: jest.Mocked<SubmissionRepository>;
-  let azureBlobStorageIntegration: jest.Mocked<AzureBlobStorageIntegration>;
-  let azureOpenAIIntegration: jest.Mocked<AzureOpenAIIntegration>;
-  let ffmpegIntegration: jest.Mocked<FfmpegIntegration>;
-  let reviewParser: jest.Mocked<ReviewParser>;
 
   const mockVideoFile: Express.Multer.File = {
     fieldname: 'video',
@@ -39,7 +35,7 @@ describe('SubmissionsReviewService', () => {
     filename: 'test.mp4',
     path: '/tmp/test.mp4',
     buffer: Buffer.from('test'),
-    stream: {} as any,
+    stream: {} as Express.Multer.File['stream'],
   };
 
   const mockSubmissionDto: SubmissionRequestDto = {
@@ -70,9 +66,8 @@ describe('SubmissionsReviewService', () => {
     const mockReviewService = createMock<ReviewService>();
 
     // Mock processor to return the input directly
-    mockProcessor.process.mockImplementation(async (promise) => {
-      const result = await promise;
-      return result;
+    mockProcessor.process.mockImplementation(async (value) => {
+      return Promise.resolve(value);
     });
 
     const module: TestingModule = await Test.createTestingModule({
@@ -119,10 +114,6 @@ describe('SubmissionsReviewService', () => {
 
     service = module.get<SubmissionsService>(SubmissionsService);
     submissionRepository = module.get(SubmissionRepository);
-    azureBlobStorageIntegration = module.get(AzureBlobStorageIntegration);
-    azureOpenAIIntegration = module.get(AzureOpenAIIntegration);
-    ffmpegIntegration = module.get(FfmpegIntegration);
-    reviewParser = module.get(ReviewParser);
   });
 
   it('should be defined', () => {

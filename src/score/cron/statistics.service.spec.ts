@@ -3,18 +3,18 @@ import { StatisticsService } from './statistics.service';
 import { StatisticsRepository } from '../IO/respositories/statistics.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { createMock } from '@golevelup/ts-jest';
+import { StatsMonthly } from '@prisma/client';
 
 // Mock the telemetry module
 jest.mock('src/system/telemetry/traced', () => ({
-  traced: jest.fn((service, method, fn) => {
-    return Promise.resolve(fn());
+  traced: jest.fn((service, method, fn: () => Promise<void>) => {
+    return fn();
   }),
 }));
 
 describe('StatisticsService', () => {
   let service: StatisticsService;
   let statisticsRepository: jest.Mocked<StatisticsRepository>;
-  let loggerService: jest.Mocked<LoggerService>;
 
   beforeEach(async () => {
     const mockStatisticsRepository = createMock<StatisticsRepository>();
@@ -36,7 +36,6 @@ describe('StatisticsService', () => {
 
     service = module.get<StatisticsService>(StatisticsService);
     statisticsRepository = module.get(StatisticsRepository);
-    loggerService = module.get(LoggerService);
   });
 
   afterEach(() => {
@@ -194,12 +193,14 @@ describe('StatisticsService', () => {
       // Test that monthly calculation works when current month is January
       const mockStats = { total: 100, fails: 5, completes: 95 };
       statisticsRepository.getStatsByFromDate.mockResolvedValue(mockStats);
-      statisticsRepository.createMonthlyStats.mockResolvedValue({} as any);
+      statisticsRepository.createMonthlyStats.mockResolvedValue(
+        {} as StatsMonthly,
+      );
 
       // Mock current date to January 1st
       const originalDate = global.Date;
       const mockDate = new Date(2024, 0, 1); // January 1st, 2024
-      global.Date = jest.fn(() => mockDate) as any;
+      global.Date = jest.fn(() => mockDate) as unknown as typeof Date;
 
       try {
         await service.handleMonthlyStatistics();

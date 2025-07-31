@@ -6,7 +6,7 @@ import { createMock } from '@golevelup/ts-jest';
 import { RevisionService } from 'src/score/core/revisions/revision.service';
 
 jest.mock('src/system/telemetry/traced', () => ({
-  traced: jest.fn((service, method, fn) => {
+  traced: jest.fn((service, method, fn: () => Promise<void>) => {
     return fn();
   }),
 }));

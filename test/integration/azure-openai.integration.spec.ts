@@ -7,8 +7,6 @@ import { LogContext } from '../../src/common/decorators/param/log-context/log.co
 
 describe('AzureOpenAIIntegration', () => {
   let integration: AzureOpenAIIntegration;
-  let logger: LoggerService;
-  let externalLogger: ExternalLogger;
 
   const mockLogContext: LogContext = {
     traceId: 'test-trace-id',
@@ -44,11 +42,9 @@ describe('AzureOpenAIIntegration', () => {
       ],
     }).compile();
 
-    module.init();
+    await module.init();
 
     integration = module.get<AzureOpenAIIntegration>(AzureOpenAIIntegration);
-    logger = module.get<LoggerService>(LoggerService);
-    externalLogger = module.get<ExternalLogger>(ExternalLogger);
   });
 
   describe('#getRawReviewResponse', () => {

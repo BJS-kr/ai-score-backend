@@ -9,7 +9,7 @@ import { createMock } from '@golevelup/ts-jest';
 
 // Mock the telemetry module
 jest.mock('src/system/telemetry/traced', () => ({
-  traced: jest.fn((service, method, fn) => {
+  traced: jest.fn((service, method, fn: () => Promise<void>) => {
     return fn();
   }),
 }));

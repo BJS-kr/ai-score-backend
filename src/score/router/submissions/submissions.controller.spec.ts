@@ -8,6 +8,7 @@ import { SubmissionStatus } from '@prisma/client';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { createMock } from '@golevelup/ts-jest';
 import { SubmissionsService } from 'src/score/core/submissions/submissions.service';
+import { Readable } from 'stream';
 
 describe('SubmissionController', () => {
   let controller: SubmissionController;
@@ -24,7 +25,7 @@ describe('SubmissionController', () => {
     filename: 'test.mp4',
     path: '/tmp/test.mp4',
     buffer: Buffer.from('test'),
-    stream: {} as any,
+    stream: {} as unknown as Readable,
   };
 
   const mockSubmissionRequestDto: SubmissionRequestDto = {
@@ -69,10 +70,6 @@ describe('SubmissionController', () => {
     queryService = module.get(SubmissionsQueryService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   it('should submit for review', async () => {
     submissionsService.newSubmission.mockResolvedValue({
       success: true,
@@ -90,14 +87,17 @@ describe('SubmissionController', () => {
       },
     });
 
-    const result = await controller.submitForReview(
+    await controller.submitForReview(
       mockFile,
       mockSubmissionRequestDto,
       mockLogContext,
     );
 
-    expect(submissionsService.newSubmission).toHaveBeenCalled();
-    expect(result).toBeDefined();
+    expect(submissionsService.newSubmission).toHaveBeenCalledWith(
+      mockFile,
+      mockSubmissionRequestDto,
+      mockLogContext,
+    );
   });
 
   it('should get submissions', async () => {
@@ -112,12 +112,14 @@ describe('SubmissionController', () => {
       total: 0,
     });
 
-    const result = await controller.getSubmissions(pagination, {
+    await controller.getSubmissions(pagination, {
       status: SubmissionStatus.COMPLETED,
     });
 
-    expect(queryService.getSubmissions).toHaveBeenCalled();
-    expect(result).toBeDefined();
+    expect(queryService.getSubmissions).toHaveBeenCalledWith(
+      pagination,
+      SubmissionStatus.COMPLETED,
+    );
   });
 
   it('should get submission by ID', async () => {
@@ -138,9 +140,8 @@ describe('SubmissionController', () => {
       updatedAt: new Date(),
     });
 
-    const result = await controller.getSubmission(submissionId);
+    await controller.getSubmission(submissionId);
 
     expect(queryService.getSubmission).toHaveBeenCalledWith(submissionId);
-    expect(result).toBeDefined();
   });
 });

@@ -28,7 +28,6 @@ import { SubmissionsQueryRequestDto } from './dto/request/submissions.query.requ
 import Combined from 'src/common/decorators/api';
 import Custom from 'src/common/decorators/param';
 import { SubmissionsQueryResponseDto } from './dto/response/submissions.query.response.dto';
-import { ReviewService } from 'src/score/core/reviews/review.service';
 import { SubmissionsService } from 'src/score/core/submissions/submissions.service';
 
 @Controller('submissions')

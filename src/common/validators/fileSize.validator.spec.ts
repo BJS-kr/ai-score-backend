@@ -94,7 +94,7 @@ describe('FileSizeValidationPipe', () => {
 
     it('should return null when file is null', () => {
       // Act
-      const result = pipe.transform(null as any);
+      const result = pipe.transform(null as unknown as Express.Multer.File);
 
       // Assert
       expect(result).toBeNull();
@@ -102,7 +102,9 @@ describe('FileSizeValidationPipe', () => {
 
     it('should return null when file is undefined', () => {
       // Act
-      const result = pipe.transform(undefined as any);
+      const result = pipe.transform(
+        undefined as unknown as Express.Multer.File,
+      );
 
       // Assert
       expect(result).toBeNull();
@@ -120,7 +122,7 @@ describe('FileSizeValidationPipe', () => {
         filename: 'test.mp4',
         path: '/tmp/test.mp4',
         buffer: Buffer.from('test'),
-      } as any;
+      } as unknown as Express.Multer.File;
 
       // Act
       const result = pipe.transform(file);

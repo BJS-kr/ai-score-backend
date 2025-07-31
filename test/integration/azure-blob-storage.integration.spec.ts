@@ -13,8 +13,6 @@ import { createMock } from '@golevelup/ts-jest';
 
 describe('AzureBlobStorageIntegration', () => {
   let integration: AzureBlobStorageIntegration;
-  let logger: LoggerService;
-  let externalLogger: ExternalLogger;
 
   const mockLogContext: LogContext<NewSubmissionLogInfo> = {
     traceId: 'test-trace-id',
@@ -45,13 +43,11 @@ describe('AzureBlobStorageIntegration', () => {
       ],
     }).compile();
 
-    module.init();
+    await module.init();
 
     integration = module.get<AzureBlobStorageIntegration>(
       AzureBlobStorageIntegration,
     );
-    logger = module.get<LoggerService>(LoggerService);
-    externalLogger = module.get<ExternalLogger>(ExternalLogger);
   });
 
   describe('#uploadFile', () => {

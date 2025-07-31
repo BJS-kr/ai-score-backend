@@ -6,8 +6,7 @@ import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
 import * as path from 'node:path';
 import * as ffprobeStatic from 'ffprobe-static';
-
-const ffmpegStatic = require('ffmpeg-static') as string;
+import * as ffmpegStatic from 'ffmpeg-static';
 
 export interface VideoProcessingRequest {
   inputFilePath: string;
@@ -38,6 +37,23 @@ export class FfmpegIntegration implements OnModuleInit {
   private MAX_FILE_SIZE_MB: number;
 
   constructor(private readonly configService: ConfigService) {}
+
+  onModuleInit() {
+    if (!ffmpegStatic) {
+      throw new Error('FFmpeg is not installed');
+    }
+
+    this.tempDirectory =
+      this.configService.get<string>('video.tempDirectory') || './temp';
+    // TODO: move to env
+    this.MAX_FILE_SIZE_MB =
+      (this.configService.get<number>('video.maxFileSizeMB') || 500) * MB;
+
+    ffmpeg.setFfmpegPath(ffmpegStatic as unknown as string);
+    ffmpeg.setFfprobePath(ffprobeStatic.path);
+
+    this.ensureTempDirectoryExists();
+  }
 
   async processVideo({
     inputFilePath,
@@ -295,18 +311,5 @@ export class FfmpegIntegration implements OnModuleInit {
     if (!fsSync.existsSync(this.tempDirectory)) {
       fsSync.mkdirSync(this.tempDirectory, { recursive: true });
     }
-  }
-
-  onModuleInit() {
-    this.tempDirectory =
-      this.configService.get<string>('video.tempDirectory') || './temp';
-    // TODO: move to env
-    this.MAX_FILE_SIZE_MB =
-      (this.configService.get<number>('video.maxFileSizeMB') || 500) * MB;
-
-    ffmpeg.setFfmpegPath(ffmpegStatic);
-    ffmpeg.setFfprobePath(ffprobeStatic.path);
-
-    this.ensureTempDirectoryExists();
   }
 }

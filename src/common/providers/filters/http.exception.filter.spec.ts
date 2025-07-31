@@ -2,11 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HttpExceptionFilter } from './http.exception.filter';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { ArgumentsHost } from '@nestjs/common';
+import { Request, Response } from 'express';
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
-  let mockResponse: any;
-  let mockRequest: any;
+  let mockResponse: Response;
+  let mockRequest: Request;
   let mockHost: ArgumentsHost;
 
   beforeEach(async () => {
@@ -20,11 +21,11 @@ describe('HttpExceptionFilter', () => {
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
-    };
+    } as unknown as Response;
 
     mockRequest = {
       url: '/api/test',
-    };
+    } as unknown as Request;
 
     mockHost = {
       switchToHttp: () => ({
@@ -63,7 +64,7 @@ describe('HttpExceptionFilter', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       result: 'failed',
       message: 'Validation failed',
-      timestamp: expect.any(String),
+      timestamp: expect.any(String) as string,
       path: '/api/test',
     });
   });
@@ -79,7 +80,7 @@ describe('HttpExceptionFilter', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       result: 'failed',
       message: 'Not found',
-      timestamp: expect.any(String),
+      timestamp: expect.any(String) as string,
       path: '/api/test',
     });
   });
@@ -96,7 +97,7 @@ describe('HttpExceptionFilter', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       result: 'failed',
       message: 'Forbidden',
-      timestamp: expect.any(String),
+      timestamp: expect.any(String) as string,
       path: '/api/users/123',
     });
   });
@@ -112,7 +113,11 @@ describe('HttpExceptionFilter', () => {
     filter.catch(exception, mockHost);
 
     // Assert
-    const callArgs = mockResponse.json.mock.calls[0][0];
+    const callArgs = (
+      (mockResponse.json as jest.Mock).mock.calls[0] as any[]
+    )[0] as {
+      timestamp: string;
+    };
     expect(callArgs.timestamp).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
     );

@@ -1,5 +1,5 @@
 import * as process from 'node:process';
-import { ILogger } from 'src/common/logger/logger.interface';
+import { ILogger } from '../../common/logger/logger.interface';
 
 export function setupGlobalGuardrail(logger: ILogger): void {
   process.on('unhandledRejection', (reason) => {

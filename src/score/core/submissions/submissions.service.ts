@@ -85,8 +85,8 @@ export class SubmissionsService {
       dto.submitText,
       dto.studentId,
       dto.studentName,
-      mediaResult.data.videoSasUrl!,
-      mediaResult.data.audioSasUrl!,
+      mediaResult.data.videoSasUrl,
+      mediaResult.data.audioSasUrl,
       logContext,
     );
   }

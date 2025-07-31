@@ -4,17 +4,17 @@ import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '../logger/logger.service';
 import { ExecutionContext } from '@nestjs/common';
 import { createMock } from '@golevelup/ts-jest';
+import * as jwt from 'jsonwebtoken';
 
 // Mock jsonwebtoken
 jest.mock('jsonwebtoken', () => ({
   verify: jest.fn(),
 }));
-
+const mockedJwt = <jest.Mocked<typeof jwt>>jwt;
 describe('AuthGuard', () => {
   let guard: AuthGuard;
   let configService: jest.Mocked<ConfigService>;
   let loggerService: jest.Mocked<LoggerService>;
-  let mockContext: ExecutionContext;
 
   beforeEach(async () => {
     const mockConfigService = createMock<ConfigService>();
@@ -37,15 +37,6 @@ describe('AuthGuard', () => {
     guard = module.get<AuthGuard>(AuthGuard);
     configService = module.get(ConfigService);
     loggerService = module.get(LoggerService);
-
-    // Setup default mock context
-    mockContext = {
-      switchToHttp: () => ({
-        getRequest: () => ({
-          headers: {},
-        }),
-      }),
-    } as ExecutionContext;
   });
 
   it('should be defined', () => {
@@ -131,8 +122,8 @@ describe('AuthGuard', () => {
 
   it('should return false when JWT verification fails', () => {
     // Arrange
-    const jwt = require('jsonwebtoken');
-    jwt.verify.mockImplementation(() => {
+
+    mockedJwt.verify.mockImplementation(() => {
       throw new Error('Invalid token');
     });
     configService.get.mockReturnValue('test-secret');
@@ -154,8 +145,8 @@ describe('AuthGuard', () => {
 
   it('should return true when JWT verification succeeds', () => {
     // Arrange
-    const jwt = require('jsonwebtoken');
-    jwt.verify.mockImplementation(() => ({ userId: '123' }));
+
+    mockedJwt.verify.mockImplementation(() => ({ userId: '123' }));
     configService.get.mockReturnValue('test-secret');
 
     const context = {

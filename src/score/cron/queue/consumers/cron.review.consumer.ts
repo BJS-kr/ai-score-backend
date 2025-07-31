@@ -4,7 +4,6 @@ import { JOB_NAME } from '../../job.constants';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { trace } from '@opentelemetry/api';
 import { traced } from 'src/system/telemetry/traced';
 import { RevisionService } from 'src/score/core/revisions/revision.service';
 
@@ -19,7 +18,7 @@ export class CronReviewConsumer extends WorkerHost {
     super();
   }
   async process(job: Job<{ submissionId: string }, void>) {
-    traced('CronReviewConsumer', 'retry failed submission', async () => {
+    await traced('CronReviewConsumer', 'retry failed submission', async () => {
       this.logger.info(`Cron: processing submission ${job.data.submissionId}`);
       const submissionId = job.data.submissionId;
 

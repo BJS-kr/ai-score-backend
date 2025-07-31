@@ -37,8 +37,6 @@ jest.mock('fs/promises', () => ({
 describe('AzureBlobStorageIntegration', () => {
   let service: AzureBlobStorageIntegration;
   let configService: jest.Mocked<ConfigService>;
-  let loggerService: jest.Mocked<LoggerService>;
-  let externalLogger: jest.Mocked<ExternalLogger>;
 
   beforeEach(async () => {
     const mockConfigService = createMock<ConfigService>();
@@ -67,8 +65,6 @@ describe('AzureBlobStorageIntegration', () => {
       AzureBlobStorageIntegration,
     );
     configService = module.get(ConfigService);
-    loggerService = module.get(LoggerService);
-    externalLogger = module.get(ExternalLogger);
 
     // Clear all mocks
     jest.clearAllMocks();

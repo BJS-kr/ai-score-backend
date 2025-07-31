@@ -1,5 +1,8 @@
 import { validate } from 'class-validator';
-import { SubmissionRequestDto } from './submission.request.dto';
+import {
+  SubmissionRequestDto,
+  SubmissionRequestSchema,
+} from './submission.request.dto';
 
 describe('SubmissionRequestDto', () => {
   describe('validation', () => {
@@ -68,7 +71,7 @@ describe('SubmissionRequestDto', () => {
       // Arrange
       const dto = new SubmissionRequestDto();
       dto.studentId = '123e4567-e89b-12d3-a456-426614174000';
-      dto.studentName = 123 as any;
+      dto.studentName = 123 as unknown as string;
       dto.componentType = 'essay';
       dto.submitText = 'This is a test essay submission.';
 
@@ -100,7 +103,7 @@ describe('SubmissionRequestDto', () => {
       const dto = new SubmissionRequestDto();
       dto.studentId = '123e4567-e89b-12d3-a456-426614174000';
       dto.studentName = 'John Doe';
-      dto.componentType = 123 as any;
+      dto.componentType = 123 as unknown as string;
       dto.submitText = 'This is a test essay submission.';
 
       // Act
@@ -132,7 +135,7 @@ describe('SubmissionRequestDto', () => {
       dto.studentId = '123e4567-e89b-12d3-a456-426614174000';
       dto.studentName = 'John Doe';
       dto.componentType = 'essay';
-      dto.submitText = 123 as any;
+      dto.submitText = 123 as unknown as string;
 
       // Act
       const errors = await validate(dto);
@@ -272,7 +275,6 @@ describe('SubmissionRequestDto', () => {
   describe('schema', () => {
     it('should have correct schema structure', () => {
       // Import the schema
-      const { SubmissionRequestSchema } = require('./submission.request.dto');
 
       // Assert
       expect(SubmissionRequestSchema).toBeDefined();

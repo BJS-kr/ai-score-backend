@@ -1,4 +1,4 @@
-import { BadRequestException, PipeTransform, Query } from '@nestjs/common';
+import { Query } from '@nestjs/common';
 import { createPaginationClass } from './paigination.class.factory';
 import { createPaginationPipe } from './pagination.pipe.factory';
 
@@ -25,7 +25,7 @@ export const Pagination = <T extends string, S extends T>(
 ) => {
   const PaginationClass = createPaginationClass(options);
 
-  return (target: any, propertyKey: string, parameterIndex: number) => {
+  return (target: object, propertyKey: string, parameterIndex: number) => {
     // 실제로 data processing이 일어나는 곳
     pagination(options)(target, propertyKey, parameterIndex);
 
@@ -34,7 +34,7 @@ export const Pagination = <T extends string, S extends T>(
       'design:paramtypes',
       target,
       propertyKey,
-    );
+    ) as any[];
 
     predefinedMetadata[parameterIndex] = PaginationClass;
 

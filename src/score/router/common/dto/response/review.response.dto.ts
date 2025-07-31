@@ -4,7 +4,6 @@ import {
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
 import { SubmissionResult } from 'src/score/core/submissions/interfaces/submission.result';
-import { SubmissionRequestDto } from '../../../submissions/dto/request/submission.request.dto';
 
 export class ReviewResponseDto {
   @ApiProperty({

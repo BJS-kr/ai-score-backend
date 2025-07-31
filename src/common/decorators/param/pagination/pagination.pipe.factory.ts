@@ -1,18 +1,17 @@
 import { BadRequestException, PipeTransform } from '@nestjs/common';
 import { Pagination, PaginationDefaults } from './pagination';
 
+export type PaginationPipeValue = {
+  page: number;
+  size?: number;
+  sort?: string;
+};
+
 export const createPaginationPipe = <T extends string>({
   defaults,
 }: PaginationDefaults<T> = {}) => {
   class PaginationPipe implements PipeTransform {
-    transform(
-      value: {
-        page: number;
-        size?: number;
-        sort?: string;
-      },
-      _: never,
-    ) {
+    transform(value: PaginationPipeValue) {
       // default page가 남아있기 때문에 0으로 처리
       value.page = Math.floor((value.page ?? 0) < 0 ? 0 : (value.page ?? 0));
       // size가 0일 경우 return에 포함되지 않음

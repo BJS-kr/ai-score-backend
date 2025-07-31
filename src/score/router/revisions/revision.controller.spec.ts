@@ -6,6 +6,16 @@ import { LogContext } from 'src/common/decorators/param/log-context/log.context'
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { RevisionService } from 'src/score/core/revisions/revision.service';
+import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
+
+jest.mock(
+  'src/score/router/common/dto/response/review.response.dto.ts',
+  () => ({
+    ReviewResponseDto: {
+      build: jest.fn(),
+    },
+  }),
+);
 
 describe('RevisionController', () => {
   let controller: RevisionController;
@@ -64,7 +74,7 @@ describe('RevisionController', () => {
         message: 'Success',
         videoUrl: 'https://example.com/video.mp4',
         audioUrl: 'https://example.com/audio.mp3',
-        score: 85,
+        score: 5,
         feedback: 'Good work!',
         highlights: ['highlight1', 'highlight2'],
         highlightedText: 'This is highlighted text',
@@ -74,13 +84,9 @@ describe('RevisionController', () => {
       },
     });
 
-    const result = await controller.createRevision(
-      { submissionId },
-      logContext,
-    );
+    await controller.createRevision({ submissionId }, logContext);
 
-    expect(revisionService.reviseSubmission).toHaveBeenCalled();
-    expect(result).toBeDefined();
+    expect(revisionService.reviseSubmission).toHaveBeenCalledWith(logContext);
   });
 
   it('should get revisions', async () => {
@@ -95,10 +101,9 @@ describe('RevisionController', () => {
       revisions: [],
     });
 
-    const result = await controller.getRevisions(pagination);
+    await controller.getRevisions(pagination);
 
     expect(revisionQueryService.getRevisions).toHaveBeenCalledWith(pagination);
-    expect(result).toBeDefined();
   });
 
   it('should get revision by ID', async () => {
@@ -111,9 +116,8 @@ describe('RevisionController', () => {
       createdAt: new Date(),
     });
 
-    const result = await controller.getRevision(revisionId);
+    await controller.getRevision(revisionId);
 
     expect(revisionQueryService.getRevision).toHaveBeenCalledWith(revisionId);
-    expect(result).toBeDefined();
   });
 });

@@ -5,7 +5,6 @@ import { Queue } from 'bullmq';
 import { JOB_NAME } from '../../job.constants';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { trace } from '@opentelemetry/api';
 import { traced } from 'src/system/telemetry/traced';
 
 @Injectable()
@@ -19,7 +18,7 @@ export class CronReviewProducer {
   @Cron(CronExpression.EVERY_10_SECONDS)
   // @Cron(CronExpression.EVERY_HOUR)
   async handleRetryFailedReviews() {
-    traced('CronReviewProducer', 'handleRetryFailedReviews', async () => {
+    await traced('CronReviewProducer', 'handleRetryFailedReviews', async () => {
       this.logger.info(`Cron: retrying one-time failed submissions...`);
 
       const submissions =
@@ -32,11 +31,12 @@ export class CronReviewProducer {
         })),
       );
 
-      submissions.length &&
+      if (submissions.length) {
         this.logger.info(
           `Cron: successfully added ${submissions.length} submissions to the queue`,
           'CronReviewProducer',
         );
+      }
     });
   }
 }
