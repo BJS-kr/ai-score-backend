@@ -1,10 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
-import {
-  createPaginationClass,
-  createPaginationPipe,
-  pagination,
-  Pagination,
-} from './pagination';
+import { Pagination } from './pagination';
+import { createPaginationClass } from './paigination.class.factory';
+import { createPaginationPipe } from './pagination.pipe.factory';
 
 describe('Pagination', () => {
   describe('createPaginationClass', () => {

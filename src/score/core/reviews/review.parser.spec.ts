@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ReviewParser } from './submissions.review.parser';
+
 import { isSuccess } from '../../helper/processor/strict.return';
+import { ReviewParser } from './review.parser';
 
 describe('ReviewParser', () => {
   let service: ReviewParser;

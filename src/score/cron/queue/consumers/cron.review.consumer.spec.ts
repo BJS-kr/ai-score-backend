@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CronReviewConsumer } from './cron.review.consumer';
-import { RevisionReviewService } from 'src/score/core/revisions/revision.review.service';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { Job } from 'bullmq';
 import { createMock } from '@golevelup/ts-jest';
+import { RevisionService } from 'src/score/core/revisions/revision.service';
 
 jest.mock('src/system/telemetry/traced', () => ({
   traced: jest.fn((service, method, fn) => {
@@ -13,18 +13,18 @@ jest.mock('src/system/telemetry/traced', () => ({
 
 describe('CronReviewConsumer', () => {
   let consumer: CronReviewConsumer;
-  let revisionReviewService: jest.Mocked<RevisionReviewService>;
+  let revisionService: jest.Mocked<RevisionService>;
 
   beforeEach(async () => {
-    const mockRevisionReviewService = createMock<RevisionReviewService>();
+    const mockRevisionService = createMock<RevisionService>();
     const mockLoggerService = createMock<LoggerService>();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CronReviewConsumer,
         {
-          provide: RevisionReviewService,
-          useValue: mockRevisionReviewService,
+          provide: RevisionService,
+          useValue: mockRevisionService,
         },
         {
           provide: LoggerService,
@@ -34,7 +34,7 @@ describe('CronReviewConsumer', () => {
     }).compile();
 
     consumer = module.get<CronReviewConsumer>(CronReviewConsumer);
-    revisionReviewService = module.get(RevisionReviewService);
+    revisionService = module.get(RevisionService);
   });
 
   it('should be defined', () => {
@@ -47,7 +47,7 @@ describe('CronReviewConsumer', () => {
       name: 'cron-review-job',
     } as Job<{ submissionId: string }, void>;
 
-    revisionReviewService.reviseSubmission.mockResolvedValue({
+    revisionService.reviseSubmission.mockResolvedValue({
       success: true,
       data: {
         message: 'Success',
@@ -65,6 +65,6 @@ describe('CronReviewConsumer', () => {
 
     await consumer.process(mockJob);
 
-    expect(revisionReviewService.reviseSubmission).toHaveBeenCalled();
+    expect(revisionService.reviseSubmission).toHaveBeenCalled();
   });
 });

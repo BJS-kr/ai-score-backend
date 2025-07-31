@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubmissionController } from './submissions.controller';
-import { SubmissionsReviewService } from '../../core/submissions/submissions.review.service';
 import { SubmissionsQueryService } from '../../core/submissions/submissions.query.service';
 import { SubmissionRequestDto } from './dto/request/submission.request.dto';
-import { Pagination } from 'src/common/decorators/param/pagination';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { SubmissionStatus } from '@prisma/client';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { createMock } from '@golevelup/ts-jest';
+import { SubmissionsService } from 'src/score/core/submissions/submissions.service';
 
 describe('SubmissionController', () => {
   let controller: SubmissionController;
-  let reviewService: jest.Mocked<SubmissionsReviewService>;
+  let submissionsService: jest.Mocked<SubmissionsService>;
   let queryService: jest.Mocked<SubmissionsQueryService>;
 
   const mockFile: Express.Multer.File = {
@@ -44,15 +44,15 @@ describe('SubmissionController', () => {
   };
 
   beforeEach(async () => {
-    const mockReviewService = createMock<SubmissionsReviewService>();
+    const mockSubmissionsService = createMock<SubmissionsService>();
     const mockQueryService = createMock<SubmissionsQueryService>();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SubmissionController],
       providers: [
         {
-          provide: SubmissionsReviewService,
-          useValue: mockReviewService,
+          provide: SubmissionsService,
+          useValue: mockSubmissionsService,
         },
         {
           provide: SubmissionsQueryService,
@@ -65,7 +65,7 @@ describe('SubmissionController', () => {
       .compile();
 
     controller = module.get<SubmissionController>(SubmissionController);
-    reviewService = module.get(SubmissionsReviewService);
+    submissionsService = module.get(SubmissionsService);
     queryService = module.get(SubmissionsQueryService);
   });
 
@@ -74,7 +74,7 @@ describe('SubmissionController', () => {
   });
 
   it('should submit for review', async () => {
-    reviewService.newSubmission.mockResolvedValue({
+    submissionsService.newSubmission.mockResolvedValue({
       success: true,
       data: {
         message: 'Success',
@@ -96,7 +96,7 @@ describe('SubmissionController', () => {
       mockLogContext,
     );
 
-    expect(reviewService.newSubmission).toHaveBeenCalled();
+    expect(submissionsService.newSubmission).toHaveBeenCalled();
     expect(result).toBeDefined();
   });
 

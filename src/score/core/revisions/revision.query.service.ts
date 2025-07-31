@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Pagination } from 'src/common/decorators/param/pagination';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { RevisionRepository } from 'src/score/IO/respositories/revision.repository';
 
 @Injectable()

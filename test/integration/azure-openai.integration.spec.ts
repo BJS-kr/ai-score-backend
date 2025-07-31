@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AzureOpenAIIntegration } from '../../src/score/IO/integrations/azure-openai.integration';
 import { LoggerService } from '../../src/common/logger/logger.service';
 import { ExternalLogger } from '../../src/score/helper/external-logger/external.logger';
-import { LogContext } from '../../src/common/decorators/param/log.context';
+import { LogContext } from '../../src/common/decorators/param/log-context/log.context';
 
 describe('AzureOpenAIIntegration', () => {
   let integration: AzureOpenAIIntegration;

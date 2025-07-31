@@ -1,15 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RevisionReviewService } from './revision.review.service';
-import { SubmissionsReviewService } from '../submissions/submissions.review.service';
+import { RevisionService } from './revision.service';
+import { SubmissionsService } from '../submissions/submissions.service';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { RevisionRepository } from 'src/score/IO/respositories/revision.repository';
 import { Processor } from 'src/score/helper/processor/processor';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { SubmissionResult } from '../submissions/interfaces/submission.result';
 import { MediaType, RevisionStatus } from '@prisma/client';
 import { isSuccess } from 'src/score/helper/processor/strict.return';
 import { createMock } from '@golevelup/ts-jest';
+import { ReviewService } from '../reviews/review.service';
 
 // Mock the @Transactional decorator to prevent issues in tests
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -21,12 +22,12 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 describe('RevisionReviewService', () => {
-  let service: RevisionReviewService;
-  let submissionReviewService: jest.Mocked<SubmissionsReviewService>;
+  let service: RevisionService;
+  let submissionsService: jest.Mocked<SubmissionsService>;
   let submissionRepository: jest.Mocked<SubmissionRepository>;
   let revisionRepository: jest.Mocked<RevisionRepository>;
   let processor: jest.Mocked<Processor>;
-  let loggerService: jest.Mocked<LoggerService>;
+  let reviewService: jest.Mocked<ReviewService>;
 
   const mockLogContext: LogContext = {
     traceId: 'test-trace-id',
@@ -99,10 +100,10 @@ describe('RevisionReviewService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        RevisionReviewService,
+        RevisionService,
         {
-          provide: SubmissionsReviewService,
-          useValue: createMock<SubmissionsReviewService>(),
+          provide: SubmissionsService,
+          useValue: createMock<SubmissionsService>(),
         },
         {
           provide: SubmissionRepository,
@@ -120,15 +121,19 @@ describe('RevisionReviewService', () => {
           provide: LoggerService,
           useValue: createMock<LoggerService>(),
         },
+        {
+          provide: ReviewService,
+          useValue: createMock<ReviewService>(),
+        },
       ],
     }).compile();
 
-    service = module.get<RevisionReviewService>(RevisionReviewService);
-    submissionReviewService = module.get(SubmissionsReviewService);
+    service = module.get<RevisionService>(RevisionService);
+    submissionsService = module.get(SubmissionsService);
     submissionRepository = module.get(SubmissionRepository);
     revisionRepository = module.get(RevisionRepository);
     processor = module.get(Processor);
-    loggerService = module.get(LoggerService);
+    reviewService = module.get(ReviewService);
   });
 
   afterEach(() => {
@@ -150,7 +155,7 @@ describe('RevisionReviewService', () => {
       submissionRepository.getSubmissionMedia
         .mockResolvedValueOnce(mockVideoMedia)
         .mockResolvedValueOnce(mockAudioMedia);
-      submissionReviewService.submitForReview.mockResolvedValue({
+      reviewService.review.mockResolvedValue({
         success: true as const,
         data: mockSubmissionResult,
       });
@@ -192,13 +197,13 @@ describe('RevisionReviewService', () => {
           audioSasUrl: mockAudioMedia.sasUrl,
         },
       );
-      expect(submissionReviewService.submitForReview).toHaveBeenCalledWith(
+      expect(reviewService.review).toHaveBeenCalledWith(
         mockSubmission.submitText,
-        mockLogContext,
-        mockVideoMedia.sasUrl,
-        mockAudioMedia.sasUrl,
         mockSubmission.studentId,
         mockSubmission.studentName,
+        mockVideoMedia.sasUrl,
+        mockAudioMedia.sasUrl,
+        mockLogContext,
       );
       expect(revisionRepository.updateRevision).toHaveBeenCalledWith(
         mockRevision.id,
@@ -250,7 +255,7 @@ describe('RevisionReviewService', () => {
         mockSubmission.id,
         MediaType.VIDEO,
       );
-      expect(submissionReviewService.submitForReview).not.toHaveBeenCalled();
+      expect(submissionsService.newSubmission).not.toHaveBeenCalled();
     });
 
     it('should return error when audio media not found', async () => {
@@ -277,7 +282,7 @@ describe('RevisionReviewService', () => {
         mockSubmission.id,
         MediaType.AUDIO,
       );
-      expect(submissionReviewService.submitForReview).not.toHaveBeenCalled();
+      expect(submissionsService.newSubmission).not.toHaveBeenCalled();
     });
 
     it('should handle submission review failure and update revision status', async () => {
@@ -291,7 +296,7 @@ describe('RevisionReviewService', () => {
       submissionRepository.getSubmissionMedia
         .mockResolvedValueOnce(mockVideoMedia)
         .mockResolvedValueOnce(mockAudioMedia);
-      submissionReviewService.submitForReview.mockResolvedValue({
+      reviewService.review.mockResolvedValue({
         success: false as const,
         error: reviewError,
       });
@@ -309,13 +314,13 @@ describe('RevisionReviewService', () => {
         expect(result.error).toBe(reviewError);
       }
 
-      expect(submissionReviewService.submitForReview).toHaveBeenCalledWith(
+      expect(reviewService.review).toHaveBeenCalledWith(
         mockSubmission.submitText,
-        mockLogContext,
-        mockVideoMedia.sasUrl,
-        mockAudioMedia.sasUrl,
         mockSubmission.studentId,
         mockSubmission.studentName,
+        mockVideoMedia.sasUrl,
+        mockAudioMedia.sasUrl,
+        mockLogContext,
       );
       expect(revisionRepository.updateRevision).toHaveBeenCalledWith(
         mockRevision.id,

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubmissionsQueryService } from './submissions.query.service';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
-import { Pagination } from 'src/common/decorators/param/pagination';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { SubmissionStatus } from '@prisma/client';
 import { createMock } from '@golevelup/ts-jest';
 

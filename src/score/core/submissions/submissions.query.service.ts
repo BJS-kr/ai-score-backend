@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SubmissionStatus } from '@prisma/client';
-import { Pagination } from 'src/common/decorators/param/pagination';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 
 @Injectable()

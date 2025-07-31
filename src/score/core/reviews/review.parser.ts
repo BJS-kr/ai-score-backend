@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { StrictReturn } from 'src/score/helper/processor/strict.return';
-import { EssayEvaluation } from './interfaces/essay.evaluation';
+import { EssayEvaluation } from '../submissions/interfaces/essay.evaluation';
 
 @Injectable()
 export class ReviewParser {

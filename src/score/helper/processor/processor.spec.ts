@@ -5,7 +5,7 @@ import { SubmissionRepository } from '../../IO/respositories/submission.resposit
 import {
   LogContext,
   ReviewLogInfo,
-} from 'src/common/decorators/param/log.context';
+} from 'src/common/decorators/param/log-context/log.context';
 import { isSuccess } from './strict.return';
 import { createMock } from '@golevelup/ts-jest';
 

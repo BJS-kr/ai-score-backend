@@ -6,7 +6,7 @@ import { SubmissionRequestDto } from '../../router/submissions/dto/request/submi
 import {
   LogContext,
   NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log.context';
+} from 'src/common/decorators/param/log-context/log.context';
 import {
   SubmissionStatus,
   SubmissionLogStatus,
@@ -88,13 +88,12 @@ describe('SubmissionRepository', () => {
           studentName: mockSubmissionDto.studentName,
           componentType: mockSubmissionDto.componentType,
           submitText: mockSubmissionDto.submitText,
-        },
-      });
-      expect(mockWriteClient.tx.submissionLog.create).toHaveBeenCalledWith({
-        data: {
-          traceId: mockLogContext.traceId,
-          submissionId: 'test-uuid-123',
-          requestUri: mockLogContext.requestUri,
+          submissionLogs: {
+            create: {
+              traceId: mockLogContext.traceId,
+              requestUri: mockLogContext.requestUri,
+            },
+          },
         },
       });
     });
@@ -222,14 +221,18 @@ describe('SubmissionRepository', () => {
           status: SubmissionStatus.COMPLETED,
           feedback,
           highlights,
-        },
-      });
-      expect(mockWriteClient.tx.submissionLog.update).toHaveBeenCalledWith({
-        where: { traceId: mockLogContext.traceId },
-        data: {
-          status: SubmissionLogStatus.COMPLETED,
-          ...logInfo,
-          latency: expect.any(Number),
+          submissionLogs: {
+            update: {
+              where: {
+                traceId: mockLogContext.traceId,
+              },
+              data: {
+                status: SubmissionLogStatus.COMPLETED,
+                ...logInfo,
+                latency: expect.any(Number),
+              },
+            },
+          },
         },
       });
     });
@@ -298,14 +301,18 @@ describe('SubmissionRepository', () => {
       // Assert
       expect(mockWriteClient.tx.submission.update).toHaveBeenCalledWith({
         where: { id: submissionId },
-        data: { status: SubmissionStatus.FAILED },
-      });
-      expect(mockWriteClient.tx.submissionLog.update).toHaveBeenCalledWith({
-        where: { traceId },
         data: {
-          status: SubmissionLogStatus.FAILED,
-          errorMessage: externalError,
-          latency: expect.any(Number),
+          status: SubmissionStatus.FAILED,
+          submissionLogs: {
+            update: {
+              where: { traceId },
+              data: {
+                status: SubmissionLogStatus.FAILED,
+                errorMessage: externalError,
+                latency: expect.any(Number),
+              },
+            },
+          },
         },
       });
     });

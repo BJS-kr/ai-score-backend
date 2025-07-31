@@ -1,15 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SubmissionsReviewService } from './submissions.review.service';
+import { SubmissionsService } from './submissions.service';
 import { SubmissionRepository } from '../../IO/respositories/submission.respository';
 import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
 import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
 import { FfmpegIntegration } from '../../IO/integrations/ffmpeg.integration';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { ReviewParser } from './submissions.review.parser';
 import { Processor } from 'src/score/helper/processor/processor';
 import { SubmissionRequestDto } from '../../router/submissions/dto/request/submission.request.dto';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { createMock } from '@golevelup/ts-jest';
+import { ReviewParser } from '../reviews/review.parser';
+import { ReviewService } from '../reviews/review.service';
+import { MediaService } from '../media/media.service';
 
 jest.mock('@nestjs-cls/transactional', () => ({
   Transactional:
@@ -20,13 +22,12 @@ jest.mock('@nestjs-cls/transactional', () => ({
 }));
 
 describe('SubmissionsReviewService', () => {
-  let service: SubmissionsReviewService;
+  let service: SubmissionsService;
   let submissionRepository: jest.Mocked<SubmissionRepository>;
   let azureBlobStorageIntegration: jest.Mocked<AzureBlobStorageIntegration>;
   let azureOpenAIIntegration: jest.Mocked<AzureOpenAIIntegration>;
   let ffmpegIntegration: jest.Mocked<FfmpegIntegration>;
   let reviewParser: jest.Mocked<ReviewParser>;
-  let processor: jest.Mocked<Processor>;
 
   const mockVideoFile: Express.Multer.File = {
     fieldname: 'video',
@@ -66,6 +67,7 @@ describe('SubmissionsReviewService', () => {
     const mockLogger = createMock<LoggerService>();
     const mockReviewParser = createMock<ReviewParser>();
     const mockProcessor = createMock<Processor>();
+    const mockReviewService = createMock<ReviewService>();
 
     // Mock processor to return the input directly
     mockProcessor.process.mockImplementation(async (promise) => {
@@ -75,7 +77,7 @@ describe('SubmissionsReviewService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        SubmissionsReviewService,
+        SubmissionsService,
         {
           provide: SubmissionRepository,
           useValue: mockSubmissionRepository,
@@ -97,6 +99,14 @@ describe('SubmissionsReviewService', () => {
           useValue: mockLogger,
         },
         {
+          provide: MediaService,
+          useValue: createMock<MediaService>(),
+        },
+        {
+          provide: ReviewService,
+          useValue: mockReviewService,
+        },
+        {
           provide: ReviewParser,
           useValue: mockReviewParser,
         },
@@ -107,13 +117,12 @@ describe('SubmissionsReviewService', () => {
       ],
     }).compile();
 
-    service = module.get<SubmissionsReviewService>(SubmissionsReviewService);
+    service = module.get<SubmissionsService>(SubmissionsService);
     submissionRepository = module.get(SubmissionRepository);
     azureBlobStorageIntegration = module.get(AzureBlobStorageIntegration);
     azureOpenAIIntegration = module.get(AzureOpenAIIntegration);
     ffmpegIntegration = module.get(FfmpegIntegration);
     reviewParser = module.get(ReviewParser);
-    processor = module.get(Processor);
   });
 
   it('should be defined', () => {
@@ -121,54 +130,70 @@ describe('SubmissionsReviewService', () => {
   });
 
   it('should process new submission successfully', async () => {
+    // Mock the dependencies properly
+    const mockReviewService = createMock<ReviewService>();
+    const mockMediaService = createMock<MediaService>();
+
+    // Mock checkAlreadySubmitted to return null (no existing submission)
     submissionRepository.checkAlreadySubmitted.mockResolvedValue(null);
+
+    // Mock createSubmission
     submissionRepository.createSubmission.mockResolvedValue('sub-123');
 
-    ffmpegIntegration.processVideo.mockResolvedValue({
+    // Mock mediaService.processMedia to return success
+    mockMediaService.processMedia.mockResolvedValue({
       success: true,
       data: {
-        localVideoPath: '/tmp/processed-video.mp4',
-        localAudioPath: '/tmp/processed-audio.mp3',
-        originalDuration: 60,
-        processedDuration: 60,
+        videoSasUrl: 'https://blob.video.sas.url',
+        audioSasUrl: 'https://blob.audio.sas.url',
       },
     });
 
-    azureBlobStorageIntegration.uploadFile
-      .mockResolvedValueOnce({
-        success: true,
-        data: {
-          videoFileUrl: 'https://blob.video.url',
-          videoSasUrl: 'https://blob.video.sas.url',
-          videoFileSize: 1024,
-        },
-      })
-      .mockResolvedValueOnce({
-        success: true,
-        data: {
-          audioFileUrl: 'https://blob.audio.url',
-          audioSasUrl: 'https://blob.audio.sas.url',
-          audioFileSize: 512,
-        },
-      });
-
-    azureOpenAIIntegration.getRawReviewResponse.mockResolvedValue({
+    // Mock reviewService.review to return success
+    mockReviewService.review.mockResolvedValue({
       success: true,
       data: {
-        reviewPrompt: 'Test prompt',
-        reviewResponse:
-          '{"score": 8, "feedback": "Good essay", "highlights": ["grammar"]}',
-      },
-    });
-
-    reviewParser.parseAndValidateReview.mockReturnValue({
-      success: true,
-      data: {
+        message: 'Submission processed successfully',
         score: 8,
         feedback: 'Good essay',
         highlights: ['grammar'],
+        highlightedText: 'This is a test essay submission.',
+        videoUrl: 'https://blob.video.sas.url',
+        audioUrl: 'https://blob.audio.sas.url',
+        studentId: '123e4567-e89b-12d3-a456-426614174000',
+        studentName: 'John Doe',
+        submitText: 'This is a test essay submission.',
       },
     });
+
+    // Create a new module with the mocked services
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        SubmissionsService,
+        {
+          provide: SubmissionRepository,
+          useValue: submissionRepository,
+        },
+        {
+          provide: ReviewService,
+          useValue: mockReviewService,
+        },
+        {
+          provide: MediaService,
+          useValue: mockMediaService,
+        },
+        {
+          provide: LoggerService,
+          useValue: createMock<LoggerService>(),
+        },
+        {
+          provide: Processor,
+          useValue: createMock<Processor>(),
+        },
+      ],
+    }).compile();
+
+    service = module.get<SubmissionsService>(SubmissionsService);
 
     const result = await service.newSubmission(
       mockVideoFile,
@@ -182,9 +207,7 @@ describe('SubmissionsReviewService', () => {
   it('should return error when student already submitted', async () => {
     submissionRepository.checkAlreadySubmitted.mockResolvedValue({
       id: 'existing-sub',
-      studentId: '123e4567-e89b-12d3-a456-426614174000',
-      componentType: 'essay',
-    } as any);
+    });
 
     const result = await service.newSubmission(
       mockVideoFile,
@@ -193,36 +216,5 @@ describe('SubmissionsReviewService', () => {
     );
 
     expect(result.success).toBe(false);
-  });
-
-  it('should submit for review successfully', async () => {
-    azureOpenAIIntegration.getRawReviewResponse.mockResolvedValue({
-      success: true,
-      data: {
-        reviewPrompt: 'Test prompt',
-        reviewResponse:
-          '{"score": 8, "feedback": "Good essay", "highlights": ["grammar"]}',
-      },
-    });
-
-    reviewParser.parseAndValidateReview.mockReturnValue({
-      success: true,
-      data: {
-        score: 8,
-        feedback: 'Good essay',
-        highlights: ['grammar'],
-      },
-    });
-
-    const result = await service.submitForReview(
-      'This is a test essay with grammar.',
-      mockLogContext,
-      'video-url',
-      'audio-url',
-      'student-id',
-      'student-name',
-    );
-
-    expect(result.success).toBe(true);
   });
 });

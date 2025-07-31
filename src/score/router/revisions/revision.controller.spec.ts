@@ -1,19 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RevisionController } from './revision.controller';
-import { RevisionReviewService } from 'src/score/core/revisions/revision.review.service';
 import { RevisionQueryService } from 'src/score/core/revisions/revision.query.service';
 import { createMock } from '@golevelup/ts-jest';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from 'src/common/logger/logger.service';
+import { RevisionService } from 'src/score/core/revisions/revision.service';
 
 describe('RevisionController', () => {
   let controller: RevisionController;
-  let revisionReviewService: jest.Mocked<RevisionReviewService>;
+  let revisionService: jest.Mocked<RevisionService>;
   let revisionQueryService: jest.Mocked<RevisionQueryService>;
 
   beforeEach(async () => {
-    const mockRevisionReviewService = createMock<RevisionReviewService>();
+    const mockRevisionService = createMock<RevisionService>();
     const mockRevisionQueryService = createMock<RevisionQueryService>();
     const mockConfigService = createMock<ConfigService>();
     const mockLoggerService = createMock<LoggerService>();
@@ -22,8 +22,8 @@ describe('RevisionController', () => {
       controllers: [RevisionController],
       providers: [
         {
-          provide: RevisionReviewService,
-          useValue: mockRevisionReviewService,
+          provide: RevisionService,
+          useValue: mockRevisionService,
         },
         {
           provide: RevisionQueryService,
@@ -41,7 +41,7 @@ describe('RevisionController', () => {
     }).compile();
 
     controller = module.get<RevisionController>(RevisionController);
-    revisionReviewService = module.get(RevisionReviewService);
+    revisionService = module.get(RevisionService);
     revisionQueryService = module.get(RevisionQueryService);
   });
 
@@ -58,7 +58,7 @@ describe('RevisionController', () => {
       logInfo: { submissionId: '' },
     };
 
-    revisionReviewService.reviseSubmission.mockResolvedValue({
+    revisionService.reviseSubmission.mockResolvedValue({
       success: true,
       data: {
         message: 'Success',
@@ -79,7 +79,7 @@ describe('RevisionController', () => {
       logContext,
     );
 
-    expect(revisionReviewService.reviseSubmission).toHaveBeenCalled();
+    expect(revisionService.reviseSubmission).toHaveBeenCalled();
     expect(result).toBeDefined();
   });
 

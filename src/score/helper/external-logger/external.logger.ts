@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { ExternalCallLogRepository } from 'src/score/IO/respositories/external.call.log.repository';
 

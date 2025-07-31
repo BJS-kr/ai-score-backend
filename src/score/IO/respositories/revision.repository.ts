@@ -2,8 +2,8 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Injectable } from '@nestjs/common';
 import { RevisionStatus } from '@prisma/client';
-import { LogContext } from 'src/common/decorators/param/log.context';
-import { Pagination } from 'src/common/decorators/param/pagination';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { PrismaService } from 'src/system/database/prisma.service';
 
 @Injectable()

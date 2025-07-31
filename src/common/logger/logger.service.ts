@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { trace } from '@opentelemetry/api';
 import pino from 'pino';
-import { ILogger } from './logger.interface';
 
 type LogData = {
   level: string;
@@ -17,7 +16,7 @@ type LogData = {
 };
 
 @Injectable()
-export class LoggerService implements ILogger {
+export class LoggerService {
   private readonly logger: pino.Logger;
 
   constructor() {

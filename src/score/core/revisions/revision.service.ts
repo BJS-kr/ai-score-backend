@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { SubmissionsReviewService } from '../submissions/submissions.review.service';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { SubmissionsService } from '../submissions/submissions.service';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import {
   isSuccess,
@@ -12,12 +12,13 @@ import { Processor } from 'src/score/helper/processor/processor';
 import { RevisionRepository } from 'src/score/IO/respositories/revision.repository';
 import { Transactional } from '@nestjs-cls/transactional';
 import { LoggerService } from 'src/common/logger/logger.service';
+import { ReviewService } from '../reviews/review.service';
 
 // TODO: 로그 추가
 @Injectable()
-export class RevisionReviewService {
+export class RevisionService {
   constructor(
-    private readonly submissionReviewService: SubmissionsReviewService,
+    private readonly reviewService: ReviewService,
     private readonly submissionRepository: SubmissionRepository,
     private readonly revisionRepository: RevisionRepository,
     private readonly processor: Processor,
@@ -59,13 +60,13 @@ export class RevisionReviewService {
     });
     const { studentId, studentName } = submission;
 
-    const reviewResult = await this.submissionReviewService.submitForReview(
+    const reviewResult = await this.reviewService.review(
       submission.submitText,
-      logContext,
-      videoSasUrl,
-      audioSasUrl,
       studentId,
       studentName,
+      videoSasUrl,
+      audioSasUrl,
+      logContext,
     );
 
     if (!isSuccess(reviewResult)) {
@@ -80,6 +81,7 @@ export class RevisionReviewService {
       revision.id,
       RevisionStatus.COMPLETED,
     );
+
     return reviewResult;
   }
 

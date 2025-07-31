@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ExternalLogger } from './external.logger';
 import { ExternalCallLogRepository } from '../../IO/respositories/external.call.log.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { createMock } from '@golevelup/ts-jest';
 
 describe('ExternalLogger', () => {

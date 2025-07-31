@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RevisionQueryService } from './revision.query.service';
 import { RevisionRepository } from 'src/score/IO/respositories/revision.repository';
-import { Pagination } from 'src/common/decorators/param/pagination';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { RevisionStatus } from '@prisma/client';
 
 describe('RevisionQueryService', () => {

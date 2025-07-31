@@ -9,16 +9,16 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { RevisionReviewService } from 'src/score/core/revisions/revision.review.service';
 import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
 import { RevisionRequestDto } from './dto/request/revision.request.dto';
 import Combined from 'src/common/decorators/api';
 import Custom from 'src/common/decorators/param';
-import { LogContext } from 'src/common/decorators/param/log.context';
-import { Pagination } from 'src/common/decorators/param/pagination';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { RevisionQueryService } from 'src/score/core/revisions/revision.query.service';
 import { RevisionResponseDto } from './dto/response/revision.response.dto';
 import { RevisionsResponseDto } from './dto/response/revisions.response.dto';
+import { RevisionService } from 'src/score/core/revisions/revision.service';
 
 @Controller('revision')
 @ApiTags('Revision')
@@ -26,7 +26,7 @@ import { RevisionsResponseDto } from './dto/response/revisions.response.dto';
 @UseGuards(AuthGuard)
 export class RevisionController {
   constructor(
-    private readonly revisionReviewService: RevisionReviewService,
+    private readonly revisionService: RevisionService,
     private readonly revisionQueryService: RevisionQueryService,
   ) {}
 
@@ -40,8 +40,7 @@ export class RevisionController {
     @Custom.LogContext() logContext: LogContext,
   ) {
     logContext.logInfo.submissionId = submissionId;
-    const result =
-      await this.revisionReviewService.reviseSubmission(logContext);
+    const result = await this.revisionService.reviseSubmission(logContext);
     const apiLatency = Date.now() - logContext.startTime;
     return ReviewResponseDto.build(result, apiLatency);
   }

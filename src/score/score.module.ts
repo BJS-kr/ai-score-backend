@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SubmissionController } from './router/submissions/submissions.controller';
-import { SubmissionsReviewService } from './core/submissions/submissions.review.service';
+import { SubmissionsService } from './core/submissions/submissions.service';
 import { AzureBlobStorageIntegration } from './IO/integrations/azure-blob-storage.integration';
 import { FfmpegIntegration } from './IO/integrations/ffmpeg.integration';
 import { AzureOpenAIIntegration } from './IO/integrations/azure-openai.integration';
@@ -11,10 +11,10 @@ import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { ExternalCallLogRepository } from './IO/respositories/external.call.log.repository';
-import { ReviewParser } from './core/submissions/submissions.review.parser';
+import { ReviewParser } from './core/reviews/review.parser';
 import { SubmissionsQueryService } from './core/submissions/submissions.query.service';
 import { RevisionController } from './router/revisions/revision.controller';
-import { RevisionReviewService } from './core/revisions/revision.review.service';
+import { RevisionService } from './core/revisions/revision.service';
 import { RevisionRepository } from './IO/respositories/revision.repository';
 import { RevisionQueryService } from './core/revisions/revision.query.service';
 import { BullModule } from '@nestjs/bullmq';
@@ -24,6 +24,8 @@ import { StatisticsService } from './cron/statistics.service';
 import { StatisticsRepository } from './IO/respositories/statistics.repository';
 import { CronReviewProducer } from './cron/queue/producers/cron.review.producer';
 import { CronReviewConsumer } from './cron/queue/consumers/cron.review.consumer';
+import { ReviewService } from './core/reviews/review.service';
+import { MediaService } from './core/media/media.service';
 
 // TODO 모듈 분리하기
 @Module({
@@ -50,11 +52,13 @@ import { CronReviewConsumer } from './cron/queue/consumers/cron.review.consumer'
      * Services
      */
     /** Submission */
-    SubmissionsReviewService,
+    SubmissionsService,
     SubmissionsQueryService,
     /** Revision */
-    RevisionReviewService,
+    RevisionService,
     RevisionQueryService,
+    ReviewService,
+    MediaService,
     /**
      * Statistics
      */

@@ -4,7 +4,7 @@ import { AzureOpenAIIntegration } from './azure-openai.integration';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { ExternalLogger } from '../../helper/external-logger/external.logger';
 import { createMock } from '@golevelup/ts-jest';
-import { LogContext } from 'src/common/decorators/param/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 
 jest.mock('openai', () => ({
   AzureOpenAI: jest.fn().mockImplementation(() => ({

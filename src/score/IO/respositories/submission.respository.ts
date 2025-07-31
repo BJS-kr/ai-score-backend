@@ -10,17 +10,10 @@ import {
 import {
   LogContext,
   NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log.context';
-import { Pagination } from 'src/common/decorators/param/pagination';
+} from 'src/common/decorators/param/log-context/log.context';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
-
-export interface EssayEvaluation {
-  score: number;
-  feedback: string;
-  highlights: string[];
-}
-
 @Injectable()
 export class SubmissionRepository {
   constructor(
@@ -43,17 +36,15 @@ export class SubmissionRepository {
           studentName: dto.studentName,
           componentType: dto.componentType,
           submitText: dto.submitText,
+          submissionLogs: {
+            create: {
+              traceId: logContext.traceId,
+              requestUri: logContext.requestUri,
+            },
+          },
         },
       })
       .then(({ id }) => id);
-
-    await this.writeClient.tx.submissionLog.create({
-      data: {
-        traceId: logContext.traceId,
-        submissionId,
-        requestUri: logContext.requestUri,
-      },
-    });
 
     return submissionId;
   }
@@ -107,15 +98,18 @@ export class SubmissionRepository {
         status: SubmissionStatus.COMPLETED,
         feedback,
         highlights,
-      },
-    });
-
-    await this.writeClient.tx.submissionLog.update({
-      where: { traceId: logContext.traceId },
-      data: {
-        status: SubmissionLogStatus.COMPLETED,
-        ...logContext.logInfo,
-        latency: Date.now() - logContext.startTime,
+        submissionLogs: {
+          update: {
+            where: {
+              traceId: logContext.traceId,
+            },
+            data: {
+              status: SubmissionLogStatus.COMPLETED,
+              ...logContext.logInfo,
+              latency: Date.now() - logContext.startTime,
+            },
+          },
+        },
       },
     });
   }
@@ -140,15 +134,18 @@ export class SubmissionRepository {
   ) {
     await this.writeClient.tx.submission.update({
       where: { id: submissionId },
-      data: { status: SubmissionStatus.FAILED },
-    });
-
-    await this.writeClient.tx.submissionLog.update({
-      where: { traceId },
       data: {
-        status: SubmissionLogStatus.FAILED,
-        errorMessage: externalError,
-        latency: Date.now() - startTime,
+        status: SubmissionStatus.FAILED,
+        submissionLogs: {
+          update: {
+            where: { traceId },
+            data: {
+              status: SubmissionLogStatus.FAILED,
+              errorMessage: externalError,
+              latency: Date.now() - startTime,
+            },
+          },
+        },
       },
     });
   }

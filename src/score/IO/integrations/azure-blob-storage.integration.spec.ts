@@ -8,7 +8,7 @@ import { MediaType } from '@prisma/client';
 import {
   LogContext,
   NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log.context';
+} from 'src/common/decorators/param/log-context/log.context';
 
 jest.mock('@azure/storage-blob', () => ({
   BlobServiceClient: {

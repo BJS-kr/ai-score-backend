@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   LogContext,
   ReviewLogInfo,
-} from 'src/common/decorators/param/log.context';
+} from 'src/common/decorators/param/log-context/log.context';
 import { LoggerService } from 'src/common/logger/logger.service';
 import {
   isSuccess,

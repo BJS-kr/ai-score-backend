@@ -9,7 +9,6 @@ import {
   UploadedFile,
   UseGuards,
 } from '@nestjs/common';
-import { SubmissionsReviewService } from '../../core/submissions/submissions.review.service';
 import {
   SubmissionRequestDto,
   SubmissionRequestSchema,
@@ -20,15 +19,17 @@ import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
 import {
   LogContext,
   NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log.context';
+} from 'src/common/decorators/param/log-context/log.context';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { Pagination } from 'src/common/decorators/param/pagination';
+import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { SubmissionsQueryService } from '../../core/submissions/submissions.query.service';
 import { SubmissionQueryResponseDto } from './dto/response/submission.query.response.dto';
 import { SubmissionsQueryRequestDto } from './dto/request/submissions.query.request.dto';
 import Combined from 'src/common/decorators/api';
 import Custom from 'src/common/decorators/param';
 import { SubmissionsQueryResponseDto } from './dto/response/submissions.query.response.dto';
+import { ReviewService } from 'src/score/core/reviews/review.service';
+import { SubmissionsService } from 'src/score/core/submissions/submissions.service';
 
 @Controller('submissions')
 @ApiTags('Submissions')
@@ -36,7 +37,7 @@ import { SubmissionsQueryResponseDto } from './dto/response/submissions.query.re
 @UseGuards(AuthGuard)
 export class SubmissionController {
   constructor(
-    private readonly reviewService: SubmissionsReviewService,
+    private readonly submissionsService: SubmissionsService,
     private readonly queryService: SubmissionsQueryService,
   ) {}
 
@@ -63,7 +64,7 @@ export class SubmissionController {
       );
     }
 
-    const submissionResult = await this.reviewService.newSubmission(
+    const submissionResult = await this.submissionsService.newSubmission(
       file,
       dto,
       logContext,
