@@ -1,10 +1,10 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AzureOpenAI } from 'openai';
-import { StrictReturn } from '../../helper/processor/strict.return';
+import { StrictReturn } from '../../../helper/processor/strict.return';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
-import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
+import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from '../integration.constants';
 import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
 import '@azure/openai/types';
 import { caught } from 'src/common/util/caught';
@@ -15,7 +15,7 @@ type RawReviewResponse = {
 };
 
 @Injectable()
-export class AzureOpenAIIntegration implements OnModuleInit {
+export class AzureOpenAIService implements OnModuleInit {
   private openAIClient: AzureOpenAI;
   private deploymentName: string;
 

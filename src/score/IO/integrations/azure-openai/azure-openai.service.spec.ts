@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { AzureOpenAIIntegration } from './azure-openai.integration';
+import { AzureOpenAIService } from './azure-openai.service';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { ExternalLogger } from '../../helper/external-logger/external.logger';
+import { ExternalLogger } from '../../../helper/external-logger/external.logger';
 import { createMock } from '@golevelup/ts-jest';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 
@@ -24,8 +24,8 @@ jest.mock('openai', () => ({
   })),
 }));
 
-describe('AzureOpenAIIntegration', () => {
-  let service: AzureOpenAIIntegration;
+describe('AzureOpenAIService', () => {
+  let service: AzureOpenAIService;
   let configService: jest.Mocked<ConfigService>;
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('AzureOpenAIIntegration', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        AzureOpenAIIntegration,
+        AzureOpenAIService,
         {
           provide: ConfigService,
           useValue: mockConfigService,
@@ -51,7 +51,7 @@ describe('AzureOpenAIIntegration', () => {
       ],
     }).compile();
 
-    service = module.get<AzureOpenAIIntegration>(AzureOpenAIIntegration);
+    service = module.get<AzureOpenAIService>(AzureOpenAIService);
     configService = module.get(ConfigService);
 
     // Clear all mocks

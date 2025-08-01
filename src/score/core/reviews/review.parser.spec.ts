@@ -1,17 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-
 import { isSuccess } from '../../helper/processor/strict.return';
-import { ReviewParser } from './review.parser';
+import { ReviewParserService } from './review.parser.service';
 
-describe('ReviewParser', () => {
-  let service: ReviewParser;
+describe('ReviewParserService', () => {
+  let service: ReviewParserService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ReviewParser],
+      providers: [ReviewParserService],
     }).compile();
 
-    service = module.get<ReviewParser>(ReviewParser);
+    service = module.get<ReviewParserService>(ReviewParserService);
   });
 
   it('should be defined', () => {

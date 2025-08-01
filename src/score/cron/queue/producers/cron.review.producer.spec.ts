@@ -3,7 +3,7 @@ import { CronReviewProducer } from './cron.review.producer';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { Queue } from 'bullmq';
-import { JOB_NAME } from '../../job.constants';
+import { JOB_NAME } from '../../constants/job.constants';
 import { SubmissionStatus } from '@prisma/client';
 import { createMock } from '@golevelup/ts-jest';
 

@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RequestLoggingInterceptor } from './request.logging.intercpetor';
-import { LoggerService } from '../../logger/logger.service';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { of } from 'rxjs';
 import { createMock } from '@golevelup/ts-jest';
+import { LoggerService } from 'src/common/logger/logger.service';
+import { RequestLoggingInterceptor } from './request.logging.intercpetor';
 
 describe('RequestLoggingInterceptor', () => {
   let interceptor: RequestLoggingInterceptor;

@@ -1,4 +1,4 @@
-import { FileSizeValidationPipe } from './fileSize.validator';
+import { FileSizeValidationPipe } from './file.size.validator';
 
 describe('FileSizeValidationPipe', () => {
   let pipe: FileSizeValidationPipe;

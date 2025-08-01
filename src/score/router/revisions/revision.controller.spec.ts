@@ -6,7 +6,6 @@ import { LogContext } from 'src/common/decorators/param/log-context/log.context'
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { RevisionService } from 'src/score/core/revisions/revision.service';
-import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
 
 jest.mock(
   'src/score/router/common/dto/response/review.response.dto.ts',

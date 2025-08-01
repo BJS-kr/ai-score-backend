@@ -3,7 +3,7 @@ import { StrictReturn } from 'src/score/helper/processor/strict.return';
 import { EssayEvaluation } from '../submissions/interfaces/essay.evaluation';
 
 @Injectable()
-export class ReviewParser {
+export class ReviewParserService {
   parseAndValidateReview(content: string): StrictReturn<EssayEvaluation> {
     try {
       const trimmedContent = this.trimJsonAnnotationIfExists(content);

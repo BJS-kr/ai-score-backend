@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { AzureBlobStorageIntegration } from './azure-blob-storage.integration';
+import { AzureBlobStorageService } from './azure-blob-storage.service';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { ExternalLogger } from '../../helper/external-logger/external.logger';
+import { ExternalLogger } from '../../../helper/external-logger/external.logger';
 import { createMock } from '@golevelup/ts-jest';
 import { MediaType } from '@prisma/client';
 import {
@@ -34,8 +34,8 @@ jest.mock('fs/promises', () => ({
   readFile: jest.fn().mockResolvedValue(Buffer.from('test file content')),
 }));
 
-describe('AzureBlobStorageIntegration', () => {
-  let service: AzureBlobStorageIntegration;
+describe('AzureBlobStorageService', () => {
+  let service: AzureBlobStorageService;
   let configService: jest.Mocked<ConfigService>;
 
   beforeEach(async () => {
@@ -45,7 +45,7 @@ describe('AzureBlobStorageIntegration', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        AzureBlobStorageIntegration,
+        AzureBlobStorageService,
         {
           provide: ConfigService,
           useValue: mockConfigService,
@@ -61,9 +61,7 @@ describe('AzureBlobStorageIntegration', () => {
       ],
     }).compile();
 
-    service = module.get<AzureBlobStorageIntegration>(
-      AzureBlobStorageIntegration,
-    );
+    service = module.get<AzureBlobStorageService>(AzureBlobStorageService);
     configService = module.get(ConfigService);
 
     // Clear all mocks

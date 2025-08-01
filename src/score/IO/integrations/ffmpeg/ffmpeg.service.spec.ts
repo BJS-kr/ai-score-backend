@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { FfmpegIntegration } from './ffmpeg.integration';
 import { createMock } from '@golevelup/ts-jest';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
+import { FfmpegService } from './ffmpeg.service';
 
 // Mock all external dependencies
 jest.mock('fluent-ffmpeg');
@@ -16,7 +16,7 @@ const mockedFs = <jest.Mocked<typeof fs>>fs;
 const mockedFsPromises = <jest.Mocked<typeof fsPromises>>fsPromises;
 
 describe('VideoService', () => {
-  let service: FfmpegIntegration;
+  let service: FfmpegService;
   let configService: jest.Mocked<ConfigService>;
 
   beforeEach(async () => {
@@ -24,7 +24,7 @@ describe('VideoService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        FfmpegIntegration,
+        FfmpegService,
         {
           provide: ConfigService,
           useValue: mockConfigService,
@@ -32,7 +32,7 @@ describe('VideoService', () => {
       ],
     }).compile();
 
-    service = module.get<FfmpegIntegration>(FfmpegIntegration);
+    service = module.get<FfmpegService>(FfmpegService);
     configService = module.get(ConfigService);
 
     // Clear all mocks before each test

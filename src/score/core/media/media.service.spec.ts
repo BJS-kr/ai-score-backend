@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MediaService } from './media.service';
 import { Processor } from 'src/score/helper/processor/processor';
-import { FfmpegIntegration } from 'src/score/IO/integrations/ffmpeg.integration';
-import { AzureBlobStorageIntegration } from 'src/score/IO/integrations/azure-blob-storage.integration';
+import { FfmpegService } from 'src/score/IO/integrations/ffmpeg/ffmpeg.service';
+import { AzureBlobStorageService } from 'src/score/IO/integrations/azure-blob-storage/azure-blob-storage.service';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { createMock } from '@golevelup/ts-jest';
 import { MediaType } from '@prisma/client';
@@ -14,15 +14,15 @@ import {
 describe('MediaService', () => {
   let service: MediaService;
   let processor: jest.Mocked<Processor>;
-  let ffmpegIntegration: jest.Mocked<FfmpegIntegration>;
-  let azureBlobStorageIntegration: jest.Mocked<AzureBlobStorageIntegration>;
+  let ffmpegIntegration: jest.Mocked<FfmpegService>;
+  let azureBlobStorageIntegration: jest.Mocked<AzureBlobStorageService>;
   let submissionRepository: jest.Mocked<SubmissionRepository>;
 
   beforeEach(async () => {
     const mockProcessor = createMock<Processor>();
-    const mockFfmpegIntegration = createMock<FfmpegIntegration>();
+    const mockFfmpegIntegration = createMock<FfmpegService>();
     const mockAzureBlobStorageIntegration =
-      createMock<AzureBlobStorageIntegration>();
+      createMock<AzureBlobStorageService>();
     const mockSubmissionRepository = createMock<SubmissionRepository>();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -33,11 +33,11 @@ describe('MediaService', () => {
           useValue: mockProcessor,
         },
         {
-          provide: FfmpegIntegration,
+          provide: FfmpegService,
           useValue: mockFfmpegIntegration,
         },
         {
-          provide: AzureBlobStorageIntegration,
+          provide: AzureBlobStorageService,
           useValue: mockAzureBlobStorageIntegration,
         },
         {
@@ -49,8 +49,8 @@ describe('MediaService', () => {
 
     service = module.get<MediaService>(MediaService);
     processor = module.get(Processor);
-    ffmpegIntegration = module.get(FfmpegIntegration);
-    azureBlobStorageIntegration = module.get(AzureBlobStorageIntegration);
+    ffmpegIntegration = module.get(FfmpegService);
+    azureBlobStorageIntegration = module.get(AzureBlobStorageService);
     submissionRepository = module.get(SubmissionRepository);
 
     jest.clearAllMocks();

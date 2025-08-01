@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { AzureOpenAIIntegration } from '../../src/score/IO/integrations/azure-openai.integration';
+import { AzureOpenAIService } from '../../src/score/IO/integrations/azure-openai/azure-openai.service';
 import { LoggerService } from '../../src/common/logger/logger.service';
 import { ExternalLogger } from '../../src/score/helper/external-logger/external.logger';
 import { LogContext } from '../../src/common/decorators/param/log-context/log.context';
 
-describe('AzureOpenAIIntegration', () => {
-  let integration: AzureOpenAIIntegration;
+describe('AzureOpenAIService', () => {
+  let integration: AzureOpenAIService;
 
   const mockLogContext: LogContext = {
     traceId: 'test-trace-id',
@@ -25,7 +25,7 @@ describe('AzureOpenAIIntegration', () => {
         }),
       ],
       providers: [
-        AzureOpenAIIntegration,
+        AzureOpenAIService,
         {
           provide: LoggerService,
           useValue: {
@@ -44,7 +44,7 @@ describe('AzureOpenAIIntegration', () => {
 
     await module.init();
 
-    integration = module.get<AzureOpenAIIntegration>(AzureOpenAIIntegration);
+    integration = module.get<AzureOpenAIService>(AzureOpenAIService);
   });
 
   describe('#getRawReviewResponse', () => {

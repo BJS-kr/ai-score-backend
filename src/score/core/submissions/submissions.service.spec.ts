@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubmissionsService } from './submissions.service';
 import { SubmissionRepository } from '../../IO/respositories/submission.respository';
-import { AzureBlobStorageIntegration } from '../../IO/integrations/azure-blob-storage.integration';
-import { AzureOpenAIIntegration } from '../../IO/integrations/azure-openai.integration';
-import { FfmpegIntegration } from '../../IO/integrations/ffmpeg.integration';
+import { AzureBlobStorageService } from '../../IO/integrations/azure-blob-storage/azure-blob-storage.service';
+import { AzureOpenAIService } from '../../IO/integrations/azure-openai/azure-openai.service';
+import { FfmpegService } from '../../IO/integrations/ffmpeg/ffmpeg.service';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { Processor } from 'src/score/helper/processor/processor';
 import { SubmissionRequestDto } from '../../router/submissions/dto/request/submission.request.dto';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { createMock } from '@golevelup/ts-jest';
-import { ReviewParser } from '../reviews/review.parser';
+import { ReviewParserService } from '../reviews/review.parser.service';
 import { ReviewService } from '../reviews/review.service';
 import { MediaService } from '../media/media.service';
 
@@ -57,11 +57,11 @@ describe('SubmissionsReviewService', () => {
   beforeEach(async () => {
     const mockSubmissionRepository = createMock<SubmissionRepository>();
     const mockAzureBlobStorageIntegration =
-      createMock<AzureBlobStorageIntegration>();
-    const mockAzureOpenAIIntegration = createMock<AzureOpenAIIntegration>();
-    const mockFfmpegIntegration = createMock<FfmpegIntegration>();
+      createMock<AzureBlobStorageService>();
+    const mockAzureOpenAIIntegration = createMock<AzureOpenAIService>();
+    const mockFfmpegIntegration = createMock<FfmpegService>();
     const mockLogger = createMock<LoggerService>();
-    const mockReviewParser = createMock<ReviewParser>();
+    const mockReviewParser = createMock<ReviewParserService>();
     const mockProcessor = createMock<Processor>();
     const mockReviewService = createMock<ReviewService>();
 
@@ -78,15 +78,15 @@ describe('SubmissionsReviewService', () => {
           useValue: mockSubmissionRepository,
         },
         {
-          provide: AzureBlobStorageIntegration,
+          provide: AzureBlobStorageService,
           useValue: mockAzureBlobStorageIntegration,
         },
         {
-          provide: AzureOpenAIIntegration,
+          provide: AzureOpenAIService,
           useValue: mockAzureOpenAIIntegration,
         },
         {
-          provide: FfmpegIntegration,
+          provide: FfmpegService,
           useValue: mockFfmpegIntegration,
         },
         {
@@ -102,7 +102,7 @@ describe('SubmissionsReviewService', () => {
           useValue: mockReviewService,
         },
         {
-          provide: ReviewParser,
+          provide: ReviewParserService,
           useValue: mockReviewParser,
         },
         {

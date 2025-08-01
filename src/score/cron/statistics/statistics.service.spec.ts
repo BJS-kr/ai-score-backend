@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StatisticsService } from './statistics.service';
-import { StatisticsRepository } from '../IO/respositories/statistics.repository';
+import { StatisticsRepository } from '../../IO/respositories/statistics.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { createMock } from '@golevelup/ts-jest';
 import { StatsMonthly } from '@prisma/client';

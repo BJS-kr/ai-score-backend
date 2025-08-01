@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpExceptionFilter } from './http.exception.filter';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { ArgumentsHost } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { HttpExceptionFilter } from './http.exception.filter';
+import { ExceptionAlert } from 'src/system/alert/exception.alert';
+import { LoggerService } from 'src/common/logger/logger.service';
 
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter;
@@ -12,7 +14,7 @@ describe('HttpExceptionFilter', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [HttpExceptionFilter],
+      providers: [HttpExceptionFilter, ExceptionAlert, LoggerService],
     }).compile();
 
     filter = module.get<HttpExceptionFilter>(HttpExceptionFilter);

@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { JOB_NAME } from '../../job.constants';
+import { JOB_NAME } from '../../constants/job.constants';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from 'src/common/logger/logger.service';

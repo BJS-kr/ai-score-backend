@@ -14,7 +14,7 @@ import {
   SubmissionRequestSchema,
 } from './dto/request/submission.request.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { FileSizeValidationPipe } from 'src/common/validators/fileSize.validator';
+import { FileSizeValidationPipe } from 'src/common/validators/file-size-validator/file.size.validator';
 import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
 import {
   LogContext,

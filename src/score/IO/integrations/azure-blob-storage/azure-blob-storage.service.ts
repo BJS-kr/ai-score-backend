@@ -6,10 +6,10 @@ import {
   BlockBlobClient,
 } from '@azure/storage-blob';
 import { readFile } from 'fs/promises';
-import { StrictReturn } from '../../helper/processor/strict.return';
+import { StrictReturn } from '../../../helper/processor/strict.return';
 import { MediaType } from '@prisma/client';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from './constant';
+import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from '../integration.constants';
 import {
   LogContext,
   NewSubmissionLogInfo,
@@ -26,7 +26,7 @@ export interface FileUploadResponse {
 }
 
 @Injectable()
-export class AzureBlobStorageIntegration implements OnModuleInit {
+export class AzureBlobStorageService implements OnModuleInit {
   private blobServiceClient: BlobServiceClient;
   private containerName: string;
   private accountName: string;

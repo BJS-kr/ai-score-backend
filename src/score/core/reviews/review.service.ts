@@ -9,8 +9,8 @@ import {
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
 import { SubmissionResult } from '../submissions/interfaces/submission.result';
-import { ReviewParser } from './review.parser';
-import { AzureOpenAIIntegration } from 'src/score/IO/integrations/azure-openai.integration';
+import { ReviewParserService } from './review.parser.service';
+import { AzureOpenAIService } from 'src/score/IO/integrations/azure-openai/azure-openai.service';
 import { EssayEvaluation } from '../submissions/interfaces/essay.evaluation';
 import { REVIEW_PROMPT } from '../submissions/resources/review.prompt';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
@@ -20,8 +20,8 @@ import { LoggerService } from 'src/common/logger/logger.service';
 export class ReviewService {
   constructor(
     private readonly processor: Processor,
-    private readonly reviewParser: ReviewParser,
-    private readonly azureOpenAIIntegration: AzureOpenAIIntegration,
+    private readonly reviewParserService: ReviewParserService,
+    private readonly azureOpenAIService: AzureOpenAIService,
     private readonly submissionRepository: SubmissionRepository,
     private readonly logger: LoggerService,
   ) {}
@@ -110,7 +110,7 @@ export class ReviewService {
     logContext: LogContext,
   ) {
     return this.processor.process(
-      await this.azureOpenAIIntegration.getRawReviewResponse(
+      await this.azureOpenAIService.getRawReviewResponse(
         this.buildEvaluationPrompt(submitText),
         logContext,
       ),
@@ -125,7 +125,7 @@ export class ReviewService {
     logContext: LogContext,
   ) {
     return this.processor.process(
-      this.reviewParser.parseAndValidateReview(rawReviewResponse),
+      this.reviewParserService.parseAndValidateReview(rawReviewResponse),
       logContext,
       ['score', 'feedback', 'highlights'],
       'review response',

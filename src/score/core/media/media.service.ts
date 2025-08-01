@@ -4,8 +4,8 @@ import {
   LogContext,
   NewSubmissionLogInfo,
 } from 'src/common/decorators/param/log-context/log.context';
-import { FfmpegIntegration } from 'src/score/IO/integrations/ffmpeg.integration';
-import { AzureBlobStorageIntegration } from 'src/score/IO/integrations/azure-blob-storage.integration';
+import { FfmpegService } from 'src/score/IO/integrations/ffmpeg/ffmpeg.service';
+import { AzureBlobStorageService } from 'src/score/IO/integrations/azure-blob-storage/azure-blob-storage.service';
 import { Processor } from 'src/score/helper/processor/processor';
 import {
   isSuccess,
@@ -17,8 +17,8 @@ import { SubmissionRepository } from 'src/score/IO/respositories/submission.resp
 export class MediaService {
   constructor(
     private readonly processor: Processor,
-    private readonly ffmpegIntegration: FfmpegIntegration,
-    private readonly azureBlobStorageIntegration: AzureBlobStorageIntegration,
+    private readonly ffmpegService: FfmpegService,
+    private readonly azureBlobStorageService: AzureBlobStorageService,
     private readonly submissionRepository: SubmissionRepository,
   ) {}
   async processMedia(
@@ -77,7 +77,7 @@ export class MediaService {
     logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     return this.processor.process(
-      await this.ffmpegIntegration.processVideo({
+      await this.ffmpegService.processVideo({
         inputFilePath: videoPath,
         submissionId: logContext.logInfo.submissionId,
       }),
@@ -92,7 +92,7 @@ export class MediaService {
     logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     const result = await this.processor.process(
-      await this.azureBlobStorageIntegration.uploadFile(
+      await this.azureBlobStorageService.uploadFile(
         localVideoPath,
         MediaType.VIDEO,
         logContext,
@@ -122,7 +122,7 @@ export class MediaService {
     logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     const result = await this.processor.process(
-      await this.azureBlobStorageIntegration.uploadFile(
+      await this.azureBlobStorageService.uploadFile(
         localAudioPath,
         MediaType.AUDIO,
         logContext,

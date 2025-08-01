@@ -1,6 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { isSuccess, StrictReturn } from '../../helper/processor/strict.return';
+import {
+  isSuccess,
+  StrictReturn,
+} from '../../../helper/processor/strict.return';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'node:fs/promises';
 import * as fsSync from 'node:fs';
@@ -32,7 +35,7 @@ export interface VideoInfo {
 const MB = 1024 * 1024;
 
 @Injectable()
-export class FfmpegIntegration implements OnModuleInit {
+export class FfmpegService implements OnModuleInit {
   private tempDirectory: string;
   private MAX_FILE_SIZE_MB: number;
 

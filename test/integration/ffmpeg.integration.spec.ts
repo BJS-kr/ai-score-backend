@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { FfmpegIntegration } from '../../src/score/IO/integrations/ffmpeg.integration';
+import { FfmpegService } from '../../src/score/IO/integrations/ffmpeg/ffmpeg.service';
 import * as path from 'path';
 import * as fs from 'fs';
 
 describe('FfmpegIntegration', () => {
-  let integration: FfmpegIntegration;
+  let integration: FfmpegService;
   let testOutputDir: string;
 
   beforeAll(async () => {
@@ -15,12 +15,12 @@ describe('FfmpegIntegration', () => {
           envFilePath: '.env',
         }),
       ],
-      providers: [FfmpegIntegration],
+      providers: [FfmpegService],
     }).compile();
 
     await module.init();
 
-    integration = module.get<FfmpegIntegration>(FfmpegIntegration);
+    integration = module.get<FfmpegService>(FfmpegService);
 
     // Create test output directory
     testOutputDir = path.join(__dirname, 'test-output');

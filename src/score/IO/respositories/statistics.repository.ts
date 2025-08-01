@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { SubmissionStatus } from '@prisma/client';
-import { Stats } from 'src/score/cron/statistics.service';
+import { Stats } from 'src/score/cron/statistics/statistics.service';
 import { PrismaService } from 'src/system/database/prisma.service';
 
 @Injectable()

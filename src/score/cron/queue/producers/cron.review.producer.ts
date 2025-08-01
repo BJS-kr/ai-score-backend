@@ -2,7 +2,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Queue } from 'bullmq';
-import { JOB_NAME } from '../../job.constants';
+import { JOB_NAME } from '../../constants/job.constants';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { traced } from 'src/system/telemetry/traced';

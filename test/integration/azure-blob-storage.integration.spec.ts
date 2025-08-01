@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { AzureBlobStorageIntegration } from '../../src/score/IO/integrations/azure-blob-storage.integration';
 import { LoggerService } from '../../src/common/logger/logger.service';
 import { ExternalLogger } from '../../src/score/helper/external-logger/external.logger';
 import { MediaType } from '@prisma/client';
@@ -10,9 +9,10 @@ import {
 } from '../../src/common/decorators/param/log-context/log.context';
 import * as path from 'path';
 import { createMock } from '@golevelup/ts-jest';
+import { AzureBlobStorageService } from 'src/score/IO/integrations/azure-blob-storage/azure-blob-storage.service';
 
-describe('AzureBlobStorageIntegration', () => {
-  let integration: AzureBlobStorageIntegration;
+describe('AzureBlobStorageService', () => {
+  let integration: AzureBlobStorageService;
 
   const mockLogContext: LogContext<NewSubmissionLogInfo> = {
     traceId: 'test-trace-id',
@@ -31,7 +31,7 @@ describe('AzureBlobStorageIntegration', () => {
         }),
       ],
       providers: [
-        AzureBlobStorageIntegration,
+        AzureBlobStorageService,
         {
           provide: LoggerService,
           useValue: createMock<LoggerService>(),
@@ -45,9 +45,7 @@ describe('AzureBlobStorageIntegration', () => {
 
     await module.init();
 
-    integration = module.get<AzureBlobStorageIntegration>(
-      AzureBlobStorageIntegration,
-    );
+    integration = module.get<AzureBlobStorageService>(AzureBlobStorageService);
   });
 
   describe('#uploadFile', () => {

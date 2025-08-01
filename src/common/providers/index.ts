@@ -1,6 +1,6 @@
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
-import { RequestLoggingInterceptor } from './interceptors/request.logging.intercpetor';
-import { HttpExceptionFilter } from './filters/http.exception.filter';
+import { RequestLoggingInterceptor } from './interceptors/request-logging/request.logging.intercpetor';
+import { HttpExceptionFilter } from './filters/http-exception-filter/http.exception.filter';
 import { Provider } from '@nestjs/common';
 
 export default [

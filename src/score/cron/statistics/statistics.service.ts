@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { EVERY_MONTH } from './cron.expressions';
-import { StatisticsRepository } from '../IO/respositories/statistics.repository';
+import { EVERY_MONTH } from '../constants/cron.expressions';
+import { StatisticsRepository } from '../../IO/respositories/statistics.repository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { traced } from 'src/system/telemetry/traced';
 

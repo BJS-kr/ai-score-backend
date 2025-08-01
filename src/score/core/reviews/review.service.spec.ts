@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReviewService } from './review.service';
 import { Processor } from 'src/score/helper/processor/processor';
-import { ReviewParser } from './review.parser';
-import { AzureOpenAIIntegration } from 'src/score/IO/integrations/azure-openai.integration';
+import { ReviewParserService } from './review.parser.service';
+import { AzureOpenAIService } from 'src/score/IO/integrations/azure-openai/azure-openai.service';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { createMock } from '@golevelup/ts-jest';
@@ -14,14 +14,14 @@ import {
 describe('ReviewService', () => {
   let service: ReviewService;
   let processor: jest.Mocked<Processor>;
-  let reviewParser: jest.Mocked<ReviewParser>;
-  let azureOpenAIIntegration: jest.Mocked<AzureOpenAIIntegration>;
+  let reviewParser: jest.Mocked<ReviewParserService>;
+  let azureOpenAIIntegration: jest.Mocked<AzureOpenAIService>;
   let submissionRepository: jest.Mocked<SubmissionRepository>;
 
   beforeEach(async () => {
     const mockProcessor = createMock<Processor>();
-    const mockReviewParser = createMock<ReviewParser>();
-    const mockAzureOpenAIIntegration = createMock<AzureOpenAIIntegration>();
+    const mockReviewParser = createMock<ReviewParserService>();
+    const mockAzureOpenAIIntegration = createMock<AzureOpenAIService>();
     const mockSubmissionRepository = createMock<SubmissionRepository>();
     const mockLogger = createMock<LoggerService>();
 
@@ -33,11 +33,11 @@ describe('ReviewService', () => {
           useValue: mockProcessor,
         },
         {
-          provide: ReviewParser,
+          provide: ReviewParserService,
           useValue: mockReviewParser,
         },
         {
-          provide: AzureOpenAIIntegration,
+          provide: AzureOpenAIService,
           useValue: mockAzureOpenAIIntegration,
         },
         {
@@ -53,8 +53,8 @@ describe('ReviewService', () => {
 
     service = module.get<ReviewService>(ReviewService);
     processor = module.get(Processor);
-    reviewParser = module.get(ReviewParser);
-    azureOpenAIIntegration = module.get(AzureOpenAIIntegration);
+    reviewParser = module.get(ReviewParserService);
+    azureOpenAIIntegration = module.get(AzureOpenAIService);
     submissionRepository = module.get(SubmissionRepository);
 
     jest.clearAllMocks();
