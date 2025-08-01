@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { isSuccess } from '../../helper/processor/strict.return';
 import { ReviewParserService } from './review.parser.service';
-import { caught } from 'src/score/helper/processor/caught';
 
 describe('ReviewParserService', () => {
   let service: ReviewParserService;
@@ -38,7 +37,7 @@ describe('ReviewParserService', () => {
       }
     });
 
-    it('should return error for invalid JSON', async () => {
+    it('should return error for invalid JSON', () => {
       // Arrange
       const invalidResponse =
         '{"score": 8, "feedback": "Good essay", "highlights": ["grammar"'; // Missing closing brace
@@ -313,7 +312,7 @@ describe('ReviewParserService', () => {
       }
     });
 
-    it('should handle undefined value', async () => {
+    it('should handle undefined value', () => {
       // Arrange
       const undefinedResponse = 'undefined';
 
@@ -327,7 +326,7 @@ describe('ReviewParserService', () => {
       }
     });
 
-    it('should handle empty string', async () => {
+    it('should handle empty string', () => {
       // Arrange
       const emptyResponse = '';
 
@@ -341,7 +340,7 @@ describe('ReviewParserService', () => {
       }
     });
 
-    it('should handle whitespace-only string', async () => {
+    it('should handle whitespace-only string', () => {
       // Arrange
       const whitespaceResponse = '   ';
 

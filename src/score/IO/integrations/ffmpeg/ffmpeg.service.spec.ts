@@ -2,18 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { createMock } from '@golevelup/ts-jest';
 import * as fs from 'node:fs';
-import * as fsPromises from 'node:fs/promises';
 import { FfmpegService } from './ffmpeg.service';
 
 // Mock all external dependencies
 jest.mock('fluent-ffmpeg');
-jest.mock('node:fs/promises');
 jest.mock('node:fs');
 jest.mock('ffprobe-static');
 jest.mock('ffmpeg-static', () => '/path/to/ffmpeg');
 
 const mockedFs = <jest.Mocked<typeof fs>>fs;
-const mockedFsPromises = <jest.Mocked<typeof fsPromises>>fsPromises;
 
 describe('VideoService', () => {
   let service: FfmpegService;
