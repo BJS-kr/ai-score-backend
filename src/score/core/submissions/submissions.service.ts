@@ -5,16 +5,13 @@ import {
   isSuccess,
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
-import { SubmissionResult } from './interfaces/submission.result';
 import { LoggerService } from 'src/common/logger/logger.service';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { Processor } from 'src/score/helper/processor/processor';
 import { Transactional } from '@nestjs-cls/transactional';
-import { ReviewService } from '../reviews/review.service';
+import { ReviewResult, ReviewService } from '../reviews/review.service';
 import { MediaService } from '../media/media.service';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 
 @Injectable()
 export class SubmissionsService {
@@ -22,17 +19,27 @@ export class SubmissionsService {
     private readonly reviewService: ReviewService,
     private readonly mediaService: MediaService,
     private readonly submissionRepository: SubmissionRepository,
-
     private readonly logger: LoggerService,
     private readonly processor: Processor,
   ) {}
 
+  /**
+   * Overall process
+   *
+   * 1. Process video
+   * 2. Upload video to blob storage
+   * 3. Upload audio to blob storage
+   * 4. Get review prompt
+   * 5. Get review response
+   * 6. Parse review response
+   * 7. Highlight text
+   */
   @Transactional()
   async newSubmission(
     video: Express.Multer.File,
     dto: SubmissionRequestDto,
     logContext: LogContext<NewSubmissionLogInfo>,
-  ): Promise<StrictReturn<SubmissionResult>> {
+  ): Promise<StrictReturn<ReviewResult>> {
     /**
      * check existing submission
      */
@@ -56,18 +63,6 @@ export class SubmissionsService {
     this.processor.accumulateContextInfo(logContext, {
       submissionId,
     });
-
-    /**
-     * Process start
-     *
-     * 1. Process video
-     * 2. Upload video to blob storage
-     * 3. Upload audio to blob storage
-     * 4. Get review prompt
-     * 5. Get review response
-     * 6. Parse review response
-     * 7. Highlight text
-     */
 
     /**
      * process media because it is a new submission

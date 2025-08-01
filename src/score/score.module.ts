@@ -9,6 +9,7 @@ import { ScoreCoreModule } from './core/score.core.module';
 import { ScoreCronModule } from './cron/score.cron.module';
 import { ScoreIoModule } from './IO/score.io.moule';
 import { ScoreHelperModule } from './helper/score.helper.module';
+import { CONFIG_KEY } from './cron/constants/config.key';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { ScoreHelperModule } from './helper/score.helper.module';
       }),
     }),
     BullModule.registerQueue({
-      configKey: 'ai-score-queue',
+      configKey: CONFIG_KEY,
       name: JOB_NAME.CRON_REVIEW,
     }),
     ScoreRouterModule,

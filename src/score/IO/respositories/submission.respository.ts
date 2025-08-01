@@ -7,13 +7,11 @@ import {
   SubmissionLogStatus,
   SubmissionStatus,
 } from '@prisma/client';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 @Injectable()
 export class SubmissionRepository {
   constructor(

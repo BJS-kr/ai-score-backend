@@ -110,22 +110,4 @@ describe('FfmpegIntegration', () => {
       }
     });
   });
-
-  describe('#cleanupFile', () => {
-    it('should successfully cleanup generated files', async () => {
-      // Arrange
-      const testFilePath = path.join(testOutputDir, 'test-cleanup.mp4');
-      fs.writeFileSync(testFilePath, 'test content');
-
-      // Act
-      const result = await integration.cleanupFile(testFilePath);
-
-      // Assert
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toBe(true);
-        expect(fs.existsSync(testFilePath)).toBe(false);
-      }
-    });
-  });
 });

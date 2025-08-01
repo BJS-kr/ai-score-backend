@@ -18,7 +18,7 @@ export class CronReviewConsumer extends WorkerHost {
     super();
   }
   async process(job: Job<{ submissionId: string }, void>) {
-    await traced('CronReviewConsumer', 'retry failed submission', async () => {
+    await traced('cron-review', 'retry failed submission', async () => {
       this.logger.info(`Cron: processing submission ${job.data.submissionId}`);
       const submissionId = job.data.submissionId;
 

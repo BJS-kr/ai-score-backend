@@ -3,13 +3,11 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerService } from '../../src/common/logger/logger.service';
 import { ExternalLogger } from '../../src/score/helper/external-logger/external.logger';
 import { MediaType } from '@prisma/client';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from '../../src/common/decorators/param/log-context/log.context';
+import { LogContext } from '../../src/common/decorators/param/log-context/log.context';
 import * as path from 'path';
 import { createMock } from '@golevelup/ts-jest';
 import { AzureBlobStorageService } from 'src/score/IO/integrations/azure-blob-storage/azure-blob-storage.service';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 
 describe('AzureBlobStorageService', () => {
   let integration: AzureBlobStorageService;

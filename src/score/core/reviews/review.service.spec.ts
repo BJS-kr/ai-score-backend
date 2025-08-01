@@ -6,10 +6,9 @@ import { AzureOpenAIService } from 'src/score/IO/integrations/azure-openai/azure
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { createMock } from '@golevelup/ts-jest';
-import {
-  LogContext,
-  ReviewLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
+import { ReviewLogInfo } from 'src/common/decorators/param/log-context/log.variants';
+import { ConfigService } from '@nestjs/config';
 
 describe('ReviewService', () => {
   let service: ReviewService;
@@ -48,8 +47,11 @@ describe('ReviewService', () => {
           provide: LoggerService,
           useValue: mockLogger,
         },
+        ConfigService,
       ],
     }).compile();
+
+    await module.init();
 
     service = module.get<ReviewService>(ReviewService);
     processor = module.get(Processor);
@@ -96,7 +98,7 @@ describe('ReviewService', () => {
       reviewParser.parseAndValidateReview.mockReturnValue({
         success: true,
         data: {
-          score: 85,
+          score: 5,
           feedback: 'Good essay',
           highlights: ['technology', 'essay'],
         },
@@ -108,7 +110,7 @@ describe('ReviewService', () => {
         data: {
           reviewPrompt: 'Test prompt',
           reviewResponse:
-            'Score: 85\nFeedback: Good essay\nHighlights: technology, essay',
+            'Score: 5\nFeedback: Good essay\nHighlights: technology, essay',
         },
       });
 
@@ -116,7 +118,7 @@ describe('ReviewService', () => {
       processor.process.mockResolvedValueOnce({
         success: true,
         data: {
-          score: 85,
+          score: 5,
           feedback: 'Good essay',
           highlights: ['technology', 'essay'],
         },
@@ -135,7 +137,7 @@ describe('ReviewService', () => {
       // Assert
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.score).toBe(85);
+        expect(result.data.score).toBe(5);
         expect(result.data.feedback).toBe('Good essay');
         expect(result.data.highlights).toEqual(['technology', 'essay']);
         expect(result.data.highlightedText).toContain('<b>technology</b>');
@@ -149,11 +151,11 @@ describe('ReviewService', () => {
 
       expect(azureOpenAIIntegration.getRawReviewResponse).toHaveBeenCalled();
       expect(reviewParser.parseAndValidateReview).toHaveBeenCalledWith(
-        'Score: 85\nFeedback: Good essay\nHighlights: technology, essay',
+        'Score: 5\nFeedback: Good essay\nHighlights: technology, essay',
       );
       expect(submissionRepository.completeSubmission).toHaveBeenCalledWith(
         'test-submission-id',
-        85,
+        5,
         'Good essay',
         ['technology', 'essay'],
         mockLogContext,
@@ -175,7 +177,7 @@ describe('ReviewService', () => {
       });
 
       // Mock processor.process to return failure
-      processor.process.mockResolvedValueOnce({
+      processor.process.mockResolvedValue({
         success: false,
         error: 'AI service unavailable',
       });
@@ -232,7 +234,7 @@ describe('ReviewService', () => {
       });
 
       // Mock processor.process to return failure for review parsing
-      processor.process.mockResolvedValueOnce({
+      processor.process.mockResolvedValue({
         success: false,
         error: 'Invalid response format',
       });
@@ -269,14 +271,14 @@ describe('ReviewService', () => {
         data: {
           reviewPrompt: 'Test prompt',
           reviewResponse:
-            'Score: 90\nFeedback: Excellent\nHighlights: technology, innovation',
+            'Score: 9\nFeedback: Excellent\nHighlights: technology, innovation',
         },
       });
 
       reviewParser.parseAndValidateReview.mockReturnValue({
         success: true,
         data: {
-          score: 90,
+          score: 9,
           feedback: 'Excellent',
           highlights: ['technology', 'innovation'],
         },
@@ -287,14 +289,14 @@ describe('ReviewService', () => {
         data: {
           reviewPrompt: 'Test prompt',
           reviewResponse:
-            'Score: 90\nFeedback: Excellent\nHighlights: technology, innovation',
+            'Score: 9\nFeedback: Excellent\nHighlights: technology, innovation',
         },
       });
 
       processor.process.mockResolvedValueOnce({
         success: true,
         data: {
-          score: 90,
+          score: 9,
           feedback: 'Excellent',
           highlights: ['technology', 'innovation'],
         },

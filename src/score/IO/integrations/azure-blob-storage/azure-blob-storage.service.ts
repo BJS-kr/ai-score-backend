@@ -10,11 +10,9 @@ import { StrictReturn } from '../../../helper/processor/strict.return';
 import { MediaType } from '@prisma/client';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from '../integration.constants';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 
 export interface FileUploadResponse {
   videoFileUrl?: string;
@@ -32,7 +30,7 @@ export class AzureBlobStorageService implements OnModuleInit {
   private accountName: string;
   private accountKey: string;
   private azureConnectionString: string;
-
+  private sasUrlExpiresOnHours: number;
   constructor(
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
@@ -47,6 +45,9 @@ export class AzureBlobStorageService implements OnModuleInit {
       this.configService.get<string>('AZURE_CONTAINER') || '';
     this.azureConnectionString =
       this.configService.get<string>('AZURE_CONNECTION_STRING') || '';
+    this.sasUrlExpiresOnHours = parseInt(
+      this.configService.get<string>('AZURE_SAS_URL_EXPIRES_HOURS') || '24',
+    );
 
     if (
       !this.accountName ||
@@ -86,6 +87,7 @@ export class AzureBlobStorageService implements OnModuleInit {
         fileSize,
       },
     );
+
     const startTime = Date.now();
     const uploadResponse = await this.upload(
       fileBuffer,
@@ -196,13 +198,16 @@ export class AzureBlobStorageService implements OnModuleInit {
 
   private async getUrls(blockBlobClient: BlockBlobClient) {
     const sasUrl = await blockBlobClient.generateSasUrl({
-      // TODO: 설정 가능하게
-      expiresOn: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      expiresOn: this.getSasUrlExpiresOn(this.sasUrlExpiresOnHours),
       permissions: BlobSASPermissions.parse('r'),
     });
 
     const fileUrl = blockBlobClient.url;
 
     return { sasUrl, fileUrl };
+  }
+
+  private getSasUrlExpiresOn(hours: number) {
+    return new Date(Date.now() + 1000 * 60 * 60 * hours);
   }
 }

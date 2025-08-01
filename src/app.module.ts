@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScoreModule } from './score/score.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { PseudoAuthModule } from './pseudo-auth/pseudo-auth.module';
@@ -12,6 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bullmq';
 import APP_PROVIDERS from './common/providers';
 import { SystemModule } from './system/systme.module';
+import { CONFIG_KEY } from './score/cron/constants/config.key';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,12 +29,17 @@ import { SystemModule } from './system/systme.module';
         }),
       ],
     }),
-    BullModule.forRoot('ai-score-queue', {
-      connection: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD,
-      },
+
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        configKey: CONFIG_KEY,
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: parseInt(configService.get<string>('REDIS_PORT') || '6379'),
+          password: configService.get<string>('REDIS_PASSWORD'),
+        },
+      }),
     }),
     ScheduleModule.forRoot(),
     ScoreModule,

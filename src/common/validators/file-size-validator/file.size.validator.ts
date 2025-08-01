@@ -1,14 +1,21 @@
 import { PipeTransform, Injectable } from '@nestjs/common';
-
-export const FILE_NOT_PROVIDED = Symbol('FILE_NOT_PROVIDED');
-export const FILE_SIZE_EXCEEDED = Symbol('FILE_SIZE_EXCEEDED');
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class FileSizeValidationPipe implements PipeTransform {
+  private readonly MAX_FILE_SIZE_MB: number;
+  constructor(private readonly configService: ConfigService) {
+    this.MAX_FILE_SIZE_MB =
+      parseInt(this.configService.get<string>('MAX_FILE_SIZE_MB') || '50') *
+      1024 *
+      1024;
+  }
+
   transform(value: Express.Multer.File) {
-    // TODO: configurable
-    const limit = 1024 * 1024 * 50;
-    return value && value.size && value.size > 0 && value.size < limit
+    return value &&
+      value.size &&
+      value.size > 0 &&
+      value.size < this.MAX_FILE_SIZE_MB
       ? value
       : null;
   }

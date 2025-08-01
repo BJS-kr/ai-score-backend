@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { trace } from '@opentelemetry/api';
 import pino from 'pino';
 
@@ -19,9 +20,9 @@ type LogData = {
 export class LoggerService {
   private readonly logger: pino.Logger;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     this.logger = pino({
-      level: process.env.LOG_LEVEL || 'info',
+      level: this.configService.get('LOG_LEVEL') || 'info',
       transport: {
         target: 'pino-pretty',
         options: {

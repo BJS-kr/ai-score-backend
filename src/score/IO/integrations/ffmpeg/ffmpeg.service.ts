@@ -46,11 +46,9 @@ export class FfmpegService implements OnModuleInit {
       throw new Error('FFmpeg is not installed');
     }
 
-    this.tempDirectory =
-      this.configService.get<string>('video.tempDirectory') || './temp';
-    // TODO: move to env
+    this.tempDirectory = this.configService.get<string>('TEMP_DIR') || './temp';
     this.MAX_FILE_SIZE_MB =
-      (this.configService.get<number>('video.maxFileSizeMB') || 500) * MB;
+      (this.configService.get<number>('MAX_FILE_SIZE_MB') || 50) * MB;
 
     ffmpeg.setFfmpegPath(ffmpegStatic as unknown as string);
     ffmpeg.setFfprobePath(ffprobeStatic.path);
@@ -63,88 +61,79 @@ export class FfmpegService implements OnModuleInit {
     submissionId,
     outputDirectory,
   }: VideoProcessingRequest): Promise<StrictReturn<VideoProcessingResponse>> {
-    try {
-      const validationResult = await this.validateInputFile(inputFilePath);
-      if (!validationResult.success) {
-        return {
-          success: false,
-          error: validationResult.error || 'Video validation failed',
-        };
-      }
+    const validationResult = await this.validateInputFile(inputFilePath);
 
-      const videoInfoResult = await this.getVideoInfo(inputFilePath);
-      if (!isSuccess(videoInfoResult)) {
-        return {
-          success: false,
-          error: videoInfoResult.error || 'Video info extraction failed',
-        };
-      }
-
-      const videoInfo = videoInfoResult.data;
-      const outputDir = outputDirectory || this.tempDirectory;
-
-      const processedVideoPath = path.join(
-        outputDir,
-        `${submissionId}_video.mp4`,
-      );
-      const extractedAudioPath = path.join(
-        outputDir,
-        `${submissionId}_audio.mp3`,
-      );
-
-      const videoProcessingResult = await this.removeRightSideImage(
-        inputFilePath,
-        processedVideoPath,
-        videoInfo,
-      );
-      if (!videoProcessingResult.success) {
-        return {
-          success: false,
-          error: videoProcessingResult.error || 'Video processing failed',
-        };
-      }
-
-      const audioExtractionResult = await this.extractAudio(
-        inputFilePath,
-        extractedAudioPath,
-      );
-      if (!audioExtractionResult.success) {
-        return {
-          success: false,
-          error: audioExtractionResult.error || 'Audio extraction failed',
-        };
-      }
-
-      const processedVideoInfoResult =
-        await this.getVideoInfo(processedVideoPath);
-      if (!isSuccess(processedVideoInfoResult)) {
-        return {
-          success: false,
-          error:
-            processedVideoInfoResult.error ||
-            'Processed video info extraction failed',
-        };
-      }
-
-      const processedVideoInfo = processedVideoInfoResult.data;
-
-      return {
-        success: true,
-        data: {
-          localVideoPath: processedVideoPath,
-          localAudioPath: extractedAudioPath,
-          originalDuration: videoInfo.duration,
-          processedDuration: processedVideoInfo.duration,
-        },
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+    if (!isSuccess(validationResult)) {
       return {
         success: false,
-        error: `FFmpeg video processing error: ${errorMessage}`,
+        error: validationResult.error,
       };
     }
+
+    const videoInfoResult = await this.getVideoInfo(inputFilePath);
+
+    if (!isSuccess(videoInfoResult)) {
+      return {
+        success: false,
+        error: videoInfoResult.error,
+      };
+    }
+
+    const videoInfo = videoInfoResult.data;
+    const outputDir = outputDirectory || this.tempDirectory;
+
+    const processedVideoPath = path.join(
+      outputDir,
+      `${submissionId}_video.mp4`,
+    );
+    const extractedAudioPath = path.join(
+      outputDir,
+      `${submissionId}_audio.mp3`,
+    );
+
+    const videoProcessingResult = await this.removeRightSideImage(
+      inputFilePath,
+      processedVideoPath,
+      videoInfo,
+    );
+    if (!videoProcessingResult.success) {
+      return {
+        success: false,
+        error: videoProcessingResult.error,
+      };
+    }
+
+    const audioExtractionResult = await this.extractAudio(
+      inputFilePath,
+      extractedAudioPath,
+    );
+    if (!audioExtractionResult.success) {
+      return {
+        success: false,
+        error: audioExtractionResult.error,
+      };
+    }
+
+    const processedVideoInfoResult =
+      await this.getVideoInfo(processedVideoPath);
+    if (!isSuccess(processedVideoInfoResult)) {
+      return {
+        success: false,
+        error: processedVideoInfoResult.error,
+      };
+    }
+
+    const processedVideoInfo = processedVideoInfoResult.data;
+
+    return {
+      success: true,
+      data: {
+        localVideoPath: processedVideoPath,
+        localAudioPath: extractedAudioPath,
+        originalDuration: videoInfo.duration,
+        processedDuration: processedVideoInfo.duration,
+      },
+    };
   }
 
   async getVideoInfo(filePath: string): Promise<StrictReturn<VideoInfo>> {
@@ -245,69 +234,44 @@ export class FfmpegService implements OnModuleInit {
     });
   }
 
-  async cleanupFile(filePath: string): Promise<StrictReturn<boolean>> {
-    if (fsSync.existsSync(filePath)) {
-      await fs.unlink(filePath);
-
+  private async validateInputFile(
+    filePath: string,
+  ): Promise<StrictReturn<null>> {
+    if (!fsSync.existsSync(filePath)) {
       return {
-        success: true,
-        data: true,
+        success: false,
+        error: `Input file does not exist: ${filePath}`,
+      };
+    }
+
+    const stats = await fs.stat(filePath);
+    if (!stats.isFile()) {
+      return {
+        success: false,
+        error: `Input path is not a file: ${filePath}`,
+      };
+    }
+
+    const extension = path.extname(filePath);
+    if (extension !== '.mp4') {
+      return {
+        success: false,
+        error: `Input file is not a video file: ${filePath}`,
+      };
+    }
+
+    const fileSize = stats.size;
+    if (fileSize > this.MAX_FILE_SIZE_MB) {
+      return {
+        success: false,
+        error: `File size (${Math.round(fileSize / MB)}MB) exceeds maximum allowed size (${this.MAX_FILE_SIZE_MB / MB}MB)`,
       };
     }
 
     return {
       success: true,
-      data: false,
+      data: null,
     };
-  }
-
-  private async validateInputFile(
-    filePath: string,
-  ): Promise<StrictReturn<boolean>> {
-    try {
-      if (!fsSync.existsSync(filePath)) {
-        return {
-          success: false,
-          error: `Input file does not exist: ${filePath}`,
-        };
-      }
-
-      const stats = await fs.stat(filePath);
-      if (!stats.isFile()) {
-        return {
-          success: false,
-          error: `Input path is not a file: ${filePath}`,
-        };
-      }
-
-      const extension = path.extname(filePath);
-      if (extension !== '.mp4') {
-        return {
-          success: false,
-          error: `Input file is not a video file: ${filePath}`,
-        };
-      }
-
-      const fileSize = stats.size;
-      if (fileSize > this.MAX_FILE_SIZE_MB) {
-        return {
-          success: false,
-          error: `File size (${Math.round(fileSize / MB)}MB) exceeds maximum allowed size (${this.MAX_FILE_SIZE_MB / MB}MB)`,
-        };
-      }
-
-      return {
-        success: true,
-        data: true,
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : JSON.stringify(error);
-      return {
-        success: false,
-        error: `File validation failed: ${errorMessage}`,
-      };
-    }
   }
 
   private ensureTempDirectoryExists(): void {

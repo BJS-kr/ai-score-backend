@@ -6,11 +6,10 @@ import { RevisionRepository } from 'src/score/IO/respositories/revision.reposito
 import { Processor } from 'src/score/helper/processor/processor';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
-import { SubmissionResult } from '../submissions/interfaces/submission.result';
 import { MediaType, RevisionStatus, SubmissionStatus } from '@prisma/client';
 import { isSuccess } from 'src/score/helper/processor/strict.return';
 import { createMock } from '@golevelup/ts-jest';
-import { ReviewService } from '../reviews/review.service';
+import { ReviewResult, ReviewService } from '../reviews/review.service';
 
 // Mock the @Transactional decorator to prevent issues in tests
 jest.mock('@nestjs-cls/transactional', () => ({
@@ -83,7 +82,7 @@ describe('RevisionReviewService', () => {
     updatedAt: new Date(),
   };
 
-  const mockSubmissionResult: SubmissionResult = {
+  const mockSubmissionResult: ReviewResult = {
     score: 85,
     feedback: 'Good essay with room for improvement.',
     highlights: ['good', 'improvement'],

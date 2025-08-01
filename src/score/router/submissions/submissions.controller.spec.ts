@@ -9,6 +9,7 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 import { createMock } from '@golevelup/ts-jest';
 import { SubmissionsService } from 'src/score/core/submissions/submissions.service';
 import { Readable } from 'stream';
+import { ConfigService } from '@nestjs/config';
 
 describe('SubmissionController', () => {
   let controller: SubmissionController;
@@ -59,6 +60,7 @@ describe('SubmissionController', () => {
           provide: SubmissionsQueryService,
           useValue: mockQueryService,
         },
+        ConfigService,
       ],
     })
       .overrideGuard(AuthGuard)

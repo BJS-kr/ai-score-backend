@@ -1,10 +1,11 @@
+import { ConfigService } from '@nestjs/config';
 import { FileSizeValidationPipe } from './file.size.validator';
 
 describe('FileSizeValidationPipe', () => {
   let pipe: FileSizeValidationPipe;
 
   beforeEach(() => {
-    pipe = new FileSizeValidationPipe();
+    pipe = new FileSizeValidationPipe(new ConfigService());
   });
 
   describe('transform', () => {

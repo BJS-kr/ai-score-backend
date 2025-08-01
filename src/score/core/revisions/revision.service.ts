@@ -5,15 +5,13 @@ import {
   isSuccess,
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
-import { SubmissionResult } from '../submissions/interfaces/submission.result';
 import { MediaType, RevisionStatus } from '@prisma/client';
 import { Processor } from 'src/score/helper/processor/processor';
 import { RevisionRepository } from 'src/score/IO/respositories/revision.repository';
 import { Transactional } from '@nestjs-cls/transactional';
 import { LoggerService } from 'src/common/logger/logger.service';
-import { ReviewService } from '../reviews/review.service';
+import { ReviewResult, ReviewService } from '../reviews/review.service';
 
-// TODO: 로그 추가
 @Injectable()
 export class RevisionService {
   constructor(
@@ -27,7 +25,10 @@ export class RevisionService {
   @Transactional()
   async reviseSubmission(
     logContext: LogContext,
-  ): Promise<StrictReturn<SubmissionResult>> {
+  ): Promise<StrictReturn<ReviewResult>> {
+    /**
+     * 기존 submission 조회
+     */
     const submission = await this.submissionRepository.getSubmission(
       logContext.logInfo.submissionId,
     );
@@ -39,15 +40,25 @@ export class RevisionService {
       };
     }
 
+    /**
+     * 새로운 revision 생성 및 submission 재시도 상태 업데이트
+     */
     const revision = await this.revisionRepository.createRevision(logContext);
 
     await this.submissionRepository.updateSubmissionRetried(submission.id);
 
+    /**
+     * 최초 제출 했던 medias 조회
+     */
     const submissionMediasResult = await this.getSubmissionMedias(
       submission.id,
     );
 
     if (!isSuccess(submissionMediasResult)) {
+      await this.revisionRepository.updateRevision(
+        revision.id,
+        RevisionStatus.FAILED,
+      );
       return submissionMediasResult;
     }
 
@@ -57,8 +68,11 @@ export class RevisionService {
       videoSasUrl,
       audioSasUrl,
     });
-    const { studentId, studentName } = submission;
 
+    /**
+     * 리뷰 요청
+     */
+    const { studentId, studentName } = submission;
     const reviewResult = await this.reviewService.review(
       submission.submitText,
       studentId,
@@ -68,6 +82,9 @@ export class RevisionService {
       logContext,
     );
 
+    /**
+     * 최종 revision 상태 업데이트
+     */
     if (!isSuccess(reviewResult)) {
       await this.revisionRepository.updateRevision(
         revision.id,

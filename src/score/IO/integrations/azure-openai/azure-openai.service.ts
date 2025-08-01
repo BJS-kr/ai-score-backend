@@ -1,13 +1,16 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AzureOpenAI } from 'openai';
-import { StrictReturn } from '../../../helper/processor/strict.return';
+import {
+  isSuccess,
+  StrictReturn,
+} from '../../../helper/processor/strict.return';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { CONTEXT, ERROR_MESSAGE, TASK_NAME } from '../integration.constants';
 import { ExternalLogger } from 'src/score/helper/external-logger/external.logger';
 import '@azure/openai/types';
-import { caught } from 'src/common/util/caught';
+import { ChatCompletion } from 'openai/resources/index';
 
 type RawReviewResponse = {
   reviewPrompt: string;
@@ -49,50 +52,7 @@ export class AzureOpenAIService implements OnModuleInit {
     reviewPrompt: string,
     logContext: LogContext,
   ): Promise<StrictReturn<RawReviewResponse>> {
-    const responseResult = await this.callAzureOpenAI(reviewPrompt, logContext);
-
-    if (!responseResult.success) {
-      return {
-        success: false,
-        error: responseResult.error || 'Failed to get raw review response',
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        reviewResponse: responseResult.data,
-        reviewPrompt: reviewPrompt,
-      },
-    };
-  }
-
-  private async callAzureOpenAI(
-    prompt: string,
-    logContext: LogContext,
-  ): Promise<StrictReturn<string>> {
-    this.logger.trace(
-      'Calling Azure OpenAI with prompt',
-      CONTEXT.AZURE_OPENAI,
-      {
-        prompt,
-      },
-    );
-
-    const start = Date.now();
-    const response = await caught(
-      this.openAIClient.chat.completions.create({
-        model: '',
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      }),
-    );
-
-    const latency = Date.now() - start;
+    const { response, latency } = await this.callAzureOpenAI(reviewPrompt);
 
     if (response instanceof Error) {
       this.logger.error(
@@ -107,6 +67,59 @@ export class AzureOpenAIService implements OnModuleInit {
       };
     }
 
+    const contentResult = await this.getContent(response, logContext, latency);
+
+    if (!isSuccess(contentResult)) {
+      return contentResult;
+    }
+
+    await this.externalLogger.logExternalCall(
+      logContext,
+      latency,
+      true,
+      CONTEXT.AZURE_OPENAI,
+      TASK_NAME.AZURE_OPENAI_REVIEW,
+      'Successfully got response from Azure OpenAI',
+    );
+
+    return {
+      success: true,
+      data: {
+        reviewPrompt,
+        reviewResponse: contentResult.data,
+      },
+    };
+  }
+
+  private async callAzureOpenAI(prompt: string) {
+    this.logger.trace(
+      'Calling Azure OpenAI with prompt',
+      CONTEXT.AZURE_OPENAI,
+      {
+        prompt,
+      },
+    );
+
+    const start = Date.now();
+    const response = await this.openAIClient.chat.completions.create({
+      model: '',
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    });
+    const latency = Date.now() - start;
+
+    return { response, latency };
+  }
+
+  private async getContent(
+    response: ChatCompletion,
+    logContext: LogContext,
+    latency: number,
+  ): Promise<StrictReturn<string>> {
     if (!response.choices || response.choices.length === 0) {
       await this.externalLogger.logExternalCall(
         logContext,
@@ -124,6 +137,7 @@ export class AzureOpenAIService implements OnModuleInit {
     }
 
     const content = response.choices[0].message?.content;
+
     if (!content) {
       await this.externalLogger.logExternalCall(
         logContext,
@@ -139,15 +153,6 @@ export class AzureOpenAIService implements OnModuleInit {
         error: ERROR_MESSAGE.AZURE_OPENAI.EMPTY_RESPONSE,
       };
     }
-
-    await this.externalLogger.logExternalCall(
-      logContext,
-      latency,
-      true,
-      CONTEXT.AZURE_OPENAI,
-      TASK_NAME.AZURE_OPENAI_REVIEW,
-      'Successfully got response from Azure OpenAI',
-    );
 
     return {
       success: true,

@@ -1,45 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { StrictReturn } from 'src/score/helper/processor/strict.return';
-import { EssayEvaluation } from '../submissions/interfaces/essay.evaluation';
+import {
+  isSuccess,
+  StrictReturn,
+} from 'src/score/helper/processor/strict.return';
+import { EssayEvaluation } from './review.service';
 
 @Injectable()
 export class ReviewParserService {
   parseAndValidateReview(content: string): StrictReturn<EssayEvaluation> {
-    try {
-      const trimmedContent = this.trimJsonAnnotationIfExists(content);
-      const evaluation: EssayEvaluation = JSON.parse(
-        trimmedContent,
-      ) as EssayEvaluation;
+    const trimmedContent = this.trimJsonAnnotationIfExists(content);
+    const evaluation = this.tryParse(trimmedContent);
 
-      if (!this.isValidEvaluation(evaluation)) {
-        return {
-          success: false,
-          error: 'Invalid response format',
-        };
-      }
+    if (!isSuccess(evaluation)) {
+      return evaluation;
+    }
 
-      // Ensure highlights are strings
-      const validHighlights = evaluation.highlights.filter(
-        (highlight) => typeof highlight === 'string' && highlight.trim(),
-      );
-
-      return {
-        success: true,
-        data: {
-          score: Math.round(evaluation.score),
-          feedback: evaluation.feedback.trim(),
-          highlights: validHighlights,
-        },
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : JSON.stringify(error);
-
+    if (!this.isValidEvaluation(evaluation.data)) {
       return {
         success: false,
-        error: `Response parsing failed: ${errorMessage}`,
+        error: 'Invalid response format',
       };
     }
+
+    const validHighlights = evaluation.data.highlights.filter(
+      (highlight) => typeof highlight === 'string' && highlight.trim(),
+    );
+
+    return {
+      success: true,
+      data: {
+        score: Math.round(evaluation.data.score),
+        feedback: evaluation.data.feedback.trim(),
+        highlights: validHighlights,
+      },
+    };
   }
 
   private isValidEvaluation(value: EssayEvaluation): value is EssayEvaluation {
@@ -74,5 +68,19 @@ export class ReviewParserService {
       return match[1].trim();
     }
     return trimmed;
+  }
+
+  private tryParse(content: string): StrictReturn<EssayEvaluation> {
+    try {
+      return {
+        success: true,
+        data: JSON.parse(content) as EssayEvaluation,
+      };
+    } catch {
+      return {
+        success: false,
+        error: 'Response parsing failed',
+      };
+    }
   }
 }

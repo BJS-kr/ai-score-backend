@@ -10,6 +10,11 @@ export type Stats = {
   fails: number;
   completes: number;
 };
+/**
+ * Statistics Cron
+ *
+ * Cron 호출이기 때문에 traced 함수를 통해 tracing 처리
+ */
 @Injectable()
 export class StatisticsService {
   constructor(
@@ -18,7 +23,7 @@ export class StatisticsService {
   ) {}
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleDailyStatistics() {
-    await traced('StatisticsService', 'handleDailyStatistics', async () => {
+    await traced('statistics', 'handleDailyStatistics', async () => {
       const yesterday = this.getDaysAgo(1);
       const dailyStats =
         await this.statisticsRepository.getStatsByFromDate(yesterday);
@@ -34,7 +39,7 @@ export class StatisticsService {
 
   @Cron(CronExpression.EVERY_WEEK)
   async handleWeeklyStatistics() {
-    await traced('StatisticsService', 'handleWeeklyStatistics', async () => {
+    await traced('statistics', 'handleWeeklyStatistics', async () => {
       const sevenDaysAgo = this.getDaysAgo(7);
       const stats =
         await this.statisticsRepository.getStatsByFromDate(sevenDaysAgo);
@@ -50,7 +55,7 @@ export class StatisticsService {
 
   @Cron(EVERY_MONTH)
   async handleMonthlyStatistics() {
-    await traced('StatisticsService', 'handleMonthlyStatistics', async () => {
+    await traced('statistics', 'handleMonthlyStatistics', async () => {
       const lastMonthFirstDay = this.getLastMonthFirstDay();
       const stats =
         await this.statisticsRepository.getStatsByFromDate(lastMonthFirstDay);

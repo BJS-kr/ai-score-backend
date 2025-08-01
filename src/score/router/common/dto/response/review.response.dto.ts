@@ -3,7 +3,7 @@ import {
   isSuccess,
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
-import { SubmissionResult } from 'src/score/core/submissions/interfaces/submission.result';
+import { ReviewResult } from 'src/score/core/reviews/review.service';
 
 export class ReviewResponseDto {
   @ApiProperty({
@@ -68,14 +68,12 @@ export class ReviewResponseDto {
   })
   apiLatency: number;
 
-  static isSubmissionResult(
-    value: SubmissionResult | null,
-  ): value is SubmissionResult {
+  static isSubmissionResult(value: ReviewResult | null): value is ReviewResult {
     return !!value;
   }
 
   static build(
-    submissionResult: StrictReturn<SubmissionResult>,
+    submissionResult: StrictReturn<ReviewResult>,
     apiLatency: number,
   ): ReviewResponseDto {
     if (!isSuccess(submissionResult)) {

@@ -14,11 +14,10 @@ export class CronReviewProducer {
     private readonly submissionRepository: SubmissionRepository,
     private readonly logger: LoggerService,
   ) {}
-  // TODO: 테스트용 크론 주기 바꾸기
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  // @Cron(CronExpression.EVERY_HOUR)
+
+  @Cron(CronExpression.EVERY_HOUR)
   async handleRetryFailedReviews() {
-    await traced('CronReviewProducer', 'handleRetryFailedReviews', async () => {
+    await traced('cron-review', 'handleRetryFailedReviews', async () => {
       this.logger.info(`Cron: retrying one-time failed submissions...`);
 
       const submissions =

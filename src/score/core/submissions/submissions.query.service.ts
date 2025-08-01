@@ -3,6 +3,9 @@ import { SubmissionStatus } from '@prisma/client';
 import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 
+/**
+ * Submission 조회용 서비스
+ */
 @Injectable()
 export class SubmissionsQueryService {
   constructor(private readonly submissionRepository: SubmissionRepository) {}

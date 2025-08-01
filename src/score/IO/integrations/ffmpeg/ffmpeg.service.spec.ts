@@ -53,8 +53,8 @@ describe('VideoService', () => {
       service.onModuleInit();
 
       // Assert
-      expect(configService.get).toHaveBeenCalledWith('video.tempDirectory');
-      expect(configService.get).toHaveBeenCalledWith('video.maxFileSizeMB');
+      expect(configService.get).toHaveBeenCalledWith('TEMP_DIR');
+      expect(configService.get).toHaveBeenCalledWith('MAX_FILE_SIZE_MB');
       expect(mockedFs.existsSync).toHaveBeenCalledWith('./temp');
       expect(mockedFs.mkdirSync).toHaveBeenCalledWith('./temp', {
         recursive: true,
@@ -72,8 +72,8 @@ describe('VideoService', () => {
       service.onModuleInit();
 
       // Assert
-      expect(configService.get).toHaveBeenCalledWith('video.tempDirectory');
-      expect(configService.get).toHaveBeenCalledWith('video.maxFileSizeMB');
+      expect(configService.get).toHaveBeenCalledWith('TEMP_DIR');
+      expect(configService.get).toHaveBeenCalledWith('MAX_FILE_SIZE_MB');
       expect(mockedFs.existsSync).toHaveBeenCalledWith('/custom/temp');
       expect(mockedFs.mkdirSync).toHaveBeenCalledWith('/custom/temp', {
         recursive: true,
@@ -91,42 +91,6 @@ describe('VideoService', () => {
       // Assert
       expect(mockedFs.existsSync).toHaveBeenCalledWith('./temp');
       expect(mockedFs.mkdirSync).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('cleanupFile', () => {
-    it('should return success when file exists and is deleted', async () => {
-      // Arrange
-      mockedFs.existsSync.mockReturnValue(true);
-      mockedFsPromises.unlink.mockResolvedValue(undefined);
-
-      // Act
-      const result = await service.cleanupFile('/path/to/file.mp4');
-
-      // Assert
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toBe(true);
-      }
-      expect(mockedFs.existsSync).toHaveBeenCalledWith('/path/to/file.mp4');
-      expect(mockedFsPromises.unlink).toHaveBeenCalledWith('/path/to/file.mp4');
-    });
-
-    it('should return success when file does not exist', async () => {
-      // Arrange
-      mockedFs.existsSync.mockReturnValue(false);
-
-      // Act
-      const result = await service.cleanupFile('/path/to/nonexistent.mp4');
-
-      // Assert
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toBe(false);
-      }
-      expect(mockedFs.existsSync).toHaveBeenCalledWith(
-        '/path/to/nonexistent.mp4',
-      );
     });
   });
 });

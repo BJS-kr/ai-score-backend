@@ -16,10 +16,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileSizeValidationPipe } from 'src/common/validators/file-size-validator/file.size.validator';
 import { ReviewResponseDto } from '../common/dto/response/review.response.dto';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { Pagination } from 'src/common/decorators/param/pagination/pagination';
 import { SubmissionsQueryService } from '../../core/submissions/submissions.query.service';
@@ -29,6 +26,8 @@ import Combined from 'src/common/decorators/api';
 import Custom from 'src/common/decorators/param';
 import { SubmissionsQueryResponseDto } from './dto/response/submissions.query.response.dto';
 import { SubmissionsService } from 'src/score/core/submissions/submissions.service';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
+import { caught } from 'src/score/helper/processor/caught';
 
 @Controller('submissions')
 @ApiTags('Submissions')
@@ -63,10 +62,8 @@ export class SubmissionController {
       );
     }
 
-    const submissionResult = await this.submissionsService.newSubmission(
-      file,
-      dto,
-      logContext,
+    const submissionResult = await caught(
+      this.submissionsService.newSubmission(file, dto, logContext),
     );
     const apiLatency = Date.now() - logContext.startTime;
 

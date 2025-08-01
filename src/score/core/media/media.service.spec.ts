@@ -6,10 +6,8 @@ import { AzureBlobStorageService } from 'src/score/IO/integrations/azure-blob-st
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
 import { createMock } from '@golevelup/ts-jest';
 import { MediaType } from '@prisma/client';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 
 describe('MediaService', () => {
   let service: MediaService;

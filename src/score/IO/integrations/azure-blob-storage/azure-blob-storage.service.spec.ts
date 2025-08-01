@@ -5,10 +5,8 @@ import { LoggerService } from 'src/common/logger/logger.service';
 import { ExternalLogger } from '../../../helper/external-logger/external.logger';
 import { createMock } from '@golevelup/ts-jest';
 import { MediaType } from '@prisma/client';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 
 jest.mock('@azure/storage-blob', () => ({
   BlobServiceClient: {
@@ -79,7 +77,8 @@ describe('AzureBlobStorageService', () => {
         .mockReturnValueOnce('test-account-key') // AZURE_ACCOUNT_KEY
         .mockReturnValueOnce('test-account-name') // AZURE_ACCOUNT_NAME
         .mockReturnValueOnce('test-container') // AZURE_CONTAINER
-        .mockReturnValueOnce('test-connection-string'); // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('test-connection-string') // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('24'); // AZURE_SAS_URL_EXPIRES_HOURS
 
       // Act
       service.onModuleInit();
@@ -97,7 +96,8 @@ describe('AzureBlobStorageService', () => {
         .mockReturnValueOnce('') // AZURE_ACCOUNT_KEY - empty
         .mockReturnValueOnce('test-account-name') // AZURE_ACCOUNT_NAME
         .mockReturnValueOnce('test-container') // AZURE_CONTAINER
-        .mockReturnValueOnce('test-connection-string'); // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('test-connection-string') // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('24'); // AZURE_SAS_URL_EXPIRES_HOURS
 
       // Act & Assert
       expect(() => service.onModuleInit()).toThrow(
@@ -111,7 +111,8 @@ describe('AzureBlobStorageService', () => {
         .mockReturnValueOnce('test-account-key') // AZURE_ACCOUNT_KEY
         .mockReturnValueOnce('') // AZURE_ACCOUNT_NAME - empty
         .mockReturnValueOnce('test-container') // AZURE_CONTAINER
-        .mockReturnValueOnce('test-connection-string'); // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('test-connection-string') // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('24'); // AZURE_SAS_URL_EXPIRES_HOURS
 
       // Act & Assert
       expect(() => service.onModuleInit()).toThrow(
@@ -125,7 +126,8 @@ describe('AzureBlobStorageService', () => {
         .mockReturnValueOnce('test-account-key') // AZURE_ACCOUNT_KEY
         .mockReturnValueOnce('test-account-name') // AZURE_ACCOUNT_NAME
         .mockReturnValueOnce('') // AZURE_CONTAINER - empty
-        .mockReturnValueOnce('test-connection-string'); // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('test-connection-string') // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('24'); // AZURE_SAS_URL_EXPIRES_HOURS
 
       // Act & Assert
       expect(() => service.onModuleInit()).toThrow(
@@ -139,7 +141,8 @@ describe('AzureBlobStorageService', () => {
         .mockReturnValueOnce('test-account-key') // AZURE_ACCOUNT_KEY
         .mockReturnValueOnce('test-account-name') // AZURE_ACCOUNT_NAME
         .mockReturnValueOnce('test-container') // AZURE_CONTAINER
-        .mockReturnValueOnce(''); // AZURE_CONNECTION_STRING - empty
+        .mockReturnValueOnce('') // AZURE_CONNECTION_STRING - empty
+        .mockReturnValueOnce('24'); // AZURE_SAS_URL_EXPIRES_HOURS
 
       // Act & Assert
       expect(() => service.onModuleInit()).toThrow(
@@ -153,7 +156,8 @@ describe('AzureBlobStorageService', () => {
         .mockReturnValueOnce('') // AZURE_ACCOUNT_KEY
         .mockReturnValueOnce('') // AZURE_ACCOUNT_NAME
         .mockReturnValueOnce('') // AZURE_CONTAINER
-        .mockReturnValueOnce(''); // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('') // AZURE_CONNECTION_STRING
+        .mockReturnValueOnce('24'); // AZURE_SAS_URL_EXPIRES_HOURS
 
       // Act & Assert
       expect(() => service.onModuleInit()).toThrow(
@@ -186,7 +190,8 @@ describe('AzureBlobStorageService', () => {
         .mockReturnValueOnce('test-account-key')
         .mockReturnValueOnce('test-account-name')
         .mockReturnValueOnce('test-container')
-        .mockReturnValueOnce('test-connection-string');
+        .mockReturnValueOnce('test-connection-string')
+        .mockReturnValueOnce('24');
 
       service.onModuleInit();
 

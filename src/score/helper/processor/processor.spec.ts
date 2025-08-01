@@ -2,12 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Processor } from './processor';
 import { LoggerService } from 'src/common/logger/logger.service';
 import { SubmissionRepository } from '../../IO/respositories/submission.respository';
-import {
-  LogContext,
-  ReviewLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { isSuccess } from './strict.return';
 import { createMock } from '@golevelup/ts-jest';
+import { ReviewLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 
 describe('Processor', () => {
   let service: Processor;
@@ -141,7 +139,7 @@ describe('Processor', () => {
 
       // Act
       const result = await service.process(
-        source,
+        Promise.resolve(source),
         mockLogContext,
         keys,
         'review processing',
@@ -170,7 +168,7 @@ describe('Processor', () => {
 
       // Act
       const result = await service.process(
-        source,
+        Promise.resolve(source),
         mockLogContext,
         keys,
         'review processing',
@@ -212,7 +210,7 @@ describe('Processor', () => {
 
       // Act
       const result = await service.process(
-        source,
+        Promise.resolve(source),
         mockLogContext,
         keys,
         'video processing',
@@ -240,7 +238,7 @@ describe('Processor', () => {
 
       // Act
       const result = await service.process(
-        source,
+        Promise.resolve(source),
         mockLogContext,
         keys,
         'processing',

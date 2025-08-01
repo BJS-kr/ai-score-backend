@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MediaType } from '@prisma/client';
-import {
-  LogContext,
-  NewSubmissionLogInfo,
-} from 'src/common/decorators/param/log-context/log.context';
+import { LogContext } from 'src/common/decorators/param/log-context/log.context';
 import { FfmpegService } from 'src/score/IO/integrations/ffmpeg/ffmpeg.service';
 import { AzureBlobStorageService } from 'src/score/IO/integrations/azure-blob-storage/azure-blob-storage.service';
 import { Processor } from 'src/score/helper/processor/processor';
@@ -12,6 +9,7 @@ import {
   StrictReturn,
 } from 'src/score/helper/processor/strict.return';
 import { SubmissionRepository } from 'src/score/IO/respositories/submission.respository';
+import { NewSubmissionLogInfo } from 'src/common/decorators/param/log-context/log.variants';
 
 @Injectable()
 export class MediaService {
@@ -77,7 +75,7 @@ export class MediaService {
     logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     return this.processor.process(
-      await this.ffmpegService.processVideo({
+      this.ffmpegService.processVideo({
         inputFilePath: videoPath,
         submissionId: logContext.logInfo.submissionId,
       }),
@@ -92,7 +90,7 @@ export class MediaService {
     logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     const result = await this.processor.process(
-      await this.azureBlobStorageService.uploadFile(
+      this.azureBlobStorageService.uploadFile(
         localVideoPath,
         MediaType.VIDEO,
         logContext,
@@ -122,7 +120,7 @@ export class MediaService {
     logContext: LogContext<NewSubmissionLogInfo>,
   ) {
     const result = await this.processor.process(
-      await this.azureBlobStorageService.uploadFile(
+      this.azureBlobStorageService.uploadFile(
         localAudioPath,
         MediaType.AUDIO,
         logContext,

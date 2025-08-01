@@ -19,6 +19,7 @@ import { RevisionQueryService } from 'src/score/core/revisions/revision.query.se
 import { RevisionResponseDto } from './dto/response/revision.response.dto';
 import { RevisionsResponseDto } from './dto/response/revisions.response.dto';
 import { RevisionService } from 'src/score/core/revisions/revision.service';
+import { caught } from 'src/score/helper/processor/caught';
 
 @Controller('revision')
 @ApiTags('Revision')
@@ -40,7 +41,9 @@ export class RevisionController {
     @Custom.LogContext() logContext: LogContext,
   ) {
     logContext.logInfo.submissionId = submissionId;
-    const result = await this.revisionService.reviseSubmission(logContext);
+    const result = await caught(
+      this.revisionService.reviseSubmission(logContext),
+    );
     const apiLatency = Date.now() - logContext.startTime;
     return ReviewResponseDto.build(result, apiLatency);
   }
