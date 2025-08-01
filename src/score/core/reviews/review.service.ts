@@ -223,7 +223,6 @@ export class ReviewService implements OnModuleInit {
     logContext: LogContext,
   ) {
     await this.submissionRepository.completeSubmission(
-      logContext.logInfo.submissionId,
       evaluation.score,
       evaluation.feedback,
       evaluation.highlights,

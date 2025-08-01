@@ -27,8 +27,6 @@ services:
   redis:
     image: redis
     container_name: ai-score-redis
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     healthcheck:
       test: ['CMD-SHELL', 'redis-cli', 'ping']
       interval: 10s
@@ -46,10 +44,8 @@ services:
     container_name: ai-score-app
     ports:
       - '${PORT}:3000'
-    environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
-      - OTEL_SERVICE_NAME=ai-score-backend
-      - OTEL_LOG_LEVEL=info
+    env_file:
+      - .env.example
     depends_on:
       db:
         condition: service_healthy

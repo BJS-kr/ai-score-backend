@@ -17,7 +17,6 @@ import { CONFIG_KEY } from './score/cron/constants/config.key';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
     }),
     ClsModule.forRoot({
       plugins: [
@@ -37,7 +36,6 @@ import { CONFIG_KEY } from './score/cron/constants/config.key';
         connection: {
           host: configService.get<string>('REDIS_HOST'),
           port: parseInt(configService.get<string>('REDIS_PORT') || '6379'),
-          password: configService.get<string>('REDIS_PASSWORD'),
         },
       }),
     }),

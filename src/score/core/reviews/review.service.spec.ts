@@ -154,7 +154,6 @@ describe('ReviewService', () => {
         'Score: 5\nFeedback: Good essay\nHighlights: technology, essay',
       );
       expect(submissionRepository.completeSubmission).toHaveBeenCalledWith(
-        'test-submission-id',
         5,
         'Good essay',
         ['technology', 'essay'],

@@ -15,9 +15,9 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:cov": "jest --coverage",
-    "test:integration": "jest --config ./test/jest-integration.json",
+    "test:integration": "dotenv -e .env.example -- jest --config ./test/jest-integration.json",
     "generate": "npx prisma generate",
-    "migrate": "npx prisma migrate dev --name init"
+    "migrate": "dotenv -e .env.example -- npx prisma migrate dev --name init"
   },
   "dependencies": {
     "@azure/core-auth": "^1.10.0",

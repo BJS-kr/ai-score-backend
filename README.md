@@ -1,98 +1,101 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# AI Score Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## 실행
 
 ```bash
-$ npm install
+# 마이그레이션이 함께 진행됩니다.
+docker compose --env-file .env.example up
 ```
 
-## Compile and run the project
+## 테스트
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run test # unit test
+npm run test:cov # coverage
+npm run test:integration # integration test
 ```
 
-## Run tests
+## Swagger에서 테스트를 진행하기
 
-```bash
-# unit tests
-$ npm run test
+1. pseudo-auth/register를 호출하면 studentId와 token을 반환 받을 수 있습니다.
+2. 반환 받은 token을 Authorization header에 추가하고 요청을 보내실 수 있습니다.
 
-# e2e tests
-$ npm run test:e2e
+## ERD
 
-# test coverage
-$ npm run test:cov
+![ERD](./erd.jpg)
+
+## 구현 특징
+
+### StrictReturn
+
+StrictReturn은 로직의 성공/실패를 표현하는 타입입니다. 코드 전반에 걸쳐 사용되었으며, 이를 통해 흐름의 패턴화를 지향했습니다.
+
+```typescript
+export type StrictReturn<T = any> = Success<T> | Failure;
+/**
+ * process video using ffmpeg
+ */
+const processedVideoResult = await this.processVideo(videoPath, logContext);
+
+if (!isSuccess(processedVideoResult)) {
+  return processedVideoResult; // Type: Failure
+}
+
+/**
+ * Upload video to blob storage
+ */
+const videoUploadResult = await this.uploadVideo(
+  processedVideoResult.data.localVideoPath,
+  logContext,
+);
+
+if (!isSuccess(videoUploadResult)) {
+  return videoUploadResult; // Type: Failure
+}
 ```
 
-## Deployment
+### Always Return
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+컨트롤의 분산을 피하기 위해 모든 예외는 항상 일정한 타입으로 반환 됩니다.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Custom Decorators
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+명시적인 표현력과 사용성을 위한 데코레이터들을 제작했습니다.
+특히, Swagger의 dynamic한 생성과 반복적 코드 지양을 위해 Pagination을 제작했습니다.
+
+```typescript
+  async getSomething(
+    @Custom.Pagination(...) pagination: Pagination,
+    @Custom.LogContext() logContext: LogContext,
+  ) {
+    ...
+  }
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Combined Decorators
 
-## Resources
+명세와 동작이 강하게 결합되어있는 use-case들을 보다 적은 코드로 처리하기 위해 제작했습니다.
 
-Check out a few resources that may come in handy when working with NestJS:
+```typescript
+  @Combined.FileUpload({
+    additionalType: ...,
+  })
+  @Combined.AlwaysOk({
+    description: ...,
+    type: ...,
+  })
+  async postSomething() {...}
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```
 
-## Support
+### Catching Errors
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+반복적인 예외 처리를 회피하기 위해 헬퍼 함수(caught)와 중앙화 된 로직 진행 helper(class Processor)를 조합합했습니다. 이를 통해 예외 처리 관련한 코드를 크게 줄일 수 있었습니다.
 
-## Stay in touch
+### Always Traced
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Http 컨텍스트 밖에서 일어나는 작업(Cron jobs)에 대해서도 Tracing을 지속하기 위해 traced 함수를 제작해 처리했습니다.
 
-## License
+### Transactional
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Post요청을 처리하는 service method는 Transactional하게 처리되고 있습니다.

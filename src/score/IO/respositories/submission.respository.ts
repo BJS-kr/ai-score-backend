@@ -83,12 +83,13 @@ export class SubmissionRepository {
   }
 
   async completeSubmission(
-    submissionId: string,
     score: number,
     feedback: string,
     highlights: string[],
     logContext: LogContext,
   ) {
+    const { submissionId, ...submissionLogInfo } = logContext.logInfo;
+
     await this.writeClient.tx.submission.update({
       where: { id: submissionId },
       data: {
@@ -103,7 +104,7 @@ export class SubmissionRepository {
             },
             data: {
               status: SubmissionLogStatus.COMPLETED,
-              ...logContext.logInfo,
+              ...submissionLogInfo,
               latency: Date.now() - logContext.startTime,
             },
           },
