@@ -1,5 +1,7 @@
 # AI Score Backend
 
+**과제 회신으로 전달드린 .env.example 파일을 root에 위치시켜주세요**
+
 ## 실행
 
 ```bash
@@ -99,3 +101,7 @@ Http 컨텍스트 밖에서 일어나는 작업(Cron jobs)에 대해서도 Traci
 ### Transactional
 
 Post요청을 처리하는 service method는 Transactional하게 처리되고 있습니다.
+
+## AI
+
+Unit Test 작성에 AI를 적극적으로 활용했습니다.
